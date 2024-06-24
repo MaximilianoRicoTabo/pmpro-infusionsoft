@@ -12,6 +12,12 @@ Author URI: https://www.paidmembershipspro.com/
 	GPLv2 Full license details in license.txt
 */
 define('PMPRO_INFUSIONSOFT_DIR', dirname(__FILE__));
+
+define( 'PMPROKEAP_DIR', dirname( __FILE__ ) );
+
+require_once PMPROKEAP_DIR . '/includes/settings.php'; // Set up settings page.
+
+
 global $pmprois_error_msg;
 
 //init
@@ -32,7 +38,7 @@ function pmprois_init()
         add_action("pmpro_after_change_membership_level", "pmprois_pmpro_after_change_membership_level", 10, 2);
     }
 
-    //pmprois_testConnection();
+   // pmprois_testConnection();
 }
 add_action("init", "pmprois_init");
 
