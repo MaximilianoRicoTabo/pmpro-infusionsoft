@@ -29,7 +29,7 @@ class PMProKeap_Api_Wrapper {
 	}
 
 	/**
-	 * Singleton patter, return a new instance only if not already created.
+	 * Singleton pattern, return a new instance only if not already created.
 	 *
 	 * @return PMProKeap_Api_Wrapper The instance. 
 	 * @since TBD
@@ -181,17 +181,19 @@ class PMProKeap_Api_Wrapper {
 	 * @since TBD
 	 */
 	public function pmprokeap_get_contact_by_email( $email ) {
-		return $this->pmprokeap_make_request('GET', 'contacts', ['email' => $email]);
+		return $this->pmprokeap_make_request( 'GET', 'contacts', ['email' => $email ] );
 	}
 
 	/**
 	 * Create a Keap contact.
 	 *
-	 * @param array $data The data.
+	 * @param WP_User $user The user.
 	 * @return array The response.
 	 * @since TBD
 	 */
-	public function pmprokeap_add_contact( $data ) {
+	public function pmprokeap_add_contact( $user ) {
+		//get user by email
+		$data = $this->pmprokeap_format_contact_request( $user );
 		return $this->pmprokeap_make_request('POST', 'contacts', $data );
 	}
 
@@ -199,11 +201,12 @@ class PMProKeap_Api_Wrapper {
 	 * Update a Keap contact.
 	 *
 	 * @param string $contact_id The contact ID.
-	 * @param array $data The data.
+	 * @param array $email user's email
 	 * @return array The response.
 	 * @since TBD
 	 */
-	public function pmprokeap_update_contact( $contact_id, $data ) {
+	public function pmprokeap_update_contact( $contact_id, $user ) {
+		$data = $this->pmprokeap_format_contact_request( $user );
 		return $this->pmprokeap_make_request( 'PATCH', 'contacts/' . $contact_id, $data );
 	}
 
@@ -260,12 +263,12 @@ class PMProKeap_Api_Wrapper {
 	 */
 	private function pmprokeap_make_curl_request( $url, $method, $data = null, $headers = [] ) {
 		$curl_handler = curl_init();
-	
+
 		switch ( $method ) {
 			case 'POST':
 				curl_setopt( $curl_handler, CURLOPT_POST, 1 );
 				if ( $data ) {
-					curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, $data );
+					curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, json_encode( $data ) );
 				}
 				break;
 			case 'PUT':
@@ -311,15 +314,21 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The formatted request.
 	 * @since TBD
 	 */
-	private function pmprokeap_format_contact_request( $email, $data ) {
-		return array (
+	private function pmprokeap_format_contact_request( $user, $data = [] ) {
+
+		$ret = array (
 			'email_addresses' => [
 				[
-					'email' => $email,
+					'email' => $user->user_email,
 					'field' => 'EMAIL1'
 				]
 			],
-			$data
+			'given_name' => $user->first_name,
+			'family_name' => $user->last_name,
 		);
+		if (! empty( $data ) ) {
+			$ret = array_merge( $ret, $data );
+		}
+		return $ret;
 	}
 }
