@@ -61,18 +61,11 @@ function pmprokeap_update_keap_contact( $user ) {
 	$levels = pmpro_getMembershipLevelsForUser( $user->ID );
     $options = get_option( 'pmprokeap_options' );
 
-	$tags = array();
-	foreach( $levels as $level ) {
-		$tags = array_merge($tags, ( $options[ 'levels' ][ $level->id ] ) );
-	}
-
 	$keap = PMProKeap_Api_Wrapper::get_instance();
     $response = $keap->pmprokeap_get_contact_by_email( $user->user_email );
 	//Get an array of ids from $tags which is a value, key array
 	//array_map(function($item) {	return $item['id'];}, $example2);
-	if( ! empty( $tags ) && is_array( $tags ) ) {
-		$tags_id =  array_keys( $tags );
-	}
+
 	$contact_id = NULL;
 	//The user doesn't exist in keap. Add them.
     if(  $response[ 'count' ] == 0 ) {
@@ -85,7 +78,15 @@ function pmprokeap_update_keap_contact( $user ) {
 		$keap->pmprokeap_update_contact( $contact_id, $user );
     }
 
+	//Get the tags from the options and user levels
 	//Assign tags to the contact
+	$tags_id = array();
+	foreach( $levels as $level ) {
+		if( !empty( $options[ 'levels' ][ $level->id ] ) ) {
+			//append to the tags_id array
+			$tags_id = array_merge( $tags_id, $options[ 'levels' ][ $level->id ] );
+		}
+	}
 	if( ! empty( $tags_id ) ) {
 		$keap->pmprokeap_assign_tags_to_contact( $contact_id, $tags_id );
 	}
@@ -110,7 +111,6 @@ function pmprokeap_user_register( $user_id ) {
 	pmprokeap_update_keap_contact( $user );
 }
 
-
 /**
  * subscribe new members (PMPro) when they register
  *
@@ -129,7 +129,6 @@ function pmprokeap_profile_update( $user_id, $old_user_data ) {
     $user = get_userdata( $user_id );
     pmprokeap_update_keap_contact( $user );
 }
-
 
 /*
 Function to add links to the plugin row meta
