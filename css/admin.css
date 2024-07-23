@@ -68,3 +68,6 @@
 .pmpro_tag-success.pmpro_tag-has_icon:before, .pmpro_tag-active.pmpro_tag-has_icon:before {
     content: "\f12a";
 }
+.pmpro_tag.pmpro_tag-has_icon.pmpro_tag-inactive.pmpro-keap-tag {
+	margin: 0 5px;
+}

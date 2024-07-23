@@ -11,7 +11,6 @@
 	 *
 	 */
 	function pmprokeap_admin_add_page() {
-		//add_options_page( 'PMPro Keap Options', 'PMPro Keap', 'manage_options', 'pmprokeap_options', 'pmprokeap_options_page' );
 		$keap_integration_menu_text = __( 'Keap Integration', 'pmpro-keap' );
 		add_submenu_page( 'pmpro-dashboard', $keap_integration_menu_text, $keap_integration_menu_text, 'manage_options', 'pmpro-keap', 'pmprokeap_options_page' );
 	}
@@ -54,7 +53,7 @@
 		}
 
 		// Retrieve stored access token
-		$accessToken = get_option( 'pmprokeap_access_token' );
+		$accessToken = get_option( 'keap_access_token' );
 
 		?>
 		<div class="wrap">
@@ -71,20 +70,13 @@
 				do_settings_sections( 'pmprokeap_options' );
 				?>
 				<p class="submit topborder">
-					<input name="submit" type="submit" class="button-primary" value="<?php esc_html_e('Save Settings', 'pmpro-mailchimp');?>" />
+					<input name="submit" type="submit" class="button-primary" value="<?php esc_html_e('Save Settings', 'pmpro-keap');?>" />
 				</p>
 				<?php if ( !$accessToken ) { ?>
 					<p><?php esc_html_e( 'You need to authorize with Keap to fetch tags.', 'pmpro-keap' ) ?></p>
 				<?php } ?>
 			</form>
 		</div>
-		<form method="get" action="">
-				<input type="hidden" name="page" value="pmprokeap_options">
-				<input type="hidden" name="action" value="authorize_keap">
-				<button type="submit" class="button button-secondary">
-					<?php esc_html_e( 'Authorize with Keap', 'pmpro-keap' ) ?>
-				</button>
-			</form>
 		<script>
 			jQuery( document ).ready( function( $ ) {
 				$( 'select' ).select2();
@@ -103,13 +95,13 @@
 		//setup settings
 		register_setting( 'pmprokeap_options', 'pmprokeap_options', 'pmprokeap_options_validate' );
 		add_settings_section( 'pmprokeap_section_general', 'General Settings', 'pmprokeap_section_general', 'pmprokeap_options' );
-		add_settings_field( 'pmprokeap_pmpro_active', 'PMPro Active', 'pmprokeap_pmpro_active', 'pmprokeap_options', 'pmprokeap_section_general' );
 		add_settings_field( 'pmprokeap_keap_authorized', 'Keap Authorized', 'pmprokeap_keap_authorized', 'pmprokeap_options', 'pmprokeap_section_general' );
 		add_settings_field( 'pmprokeap_api_key', 'Keap API Key', 'pmprokeap_api_key', 'pmprokeap_options', 'pmprokeap_section_general' );
 		add_settings_field( 'pmprokeap_api_secret', 'Keap Secret Key', 'pmprokeap_secret_key', 'pmprokeap_options', 'pmprokeap_section_general' );
 		add_settings_field( 'pmprokeap_users_tags', 'All Users Tags', 'pmprokeap_users_tags', 'pmprokeap_options', 'pmprois_section_general' );
-		add_settings_section( 'pmprokeap_section_levels', 'Levels Tags', 'pmprokeap_section_levels', 'pmprokeap_options' );
-		// add_settings_field('pmprokeap_levels_tags', '', 'pmprokeap_section_levels', 'pmprokeap_options', 'pmprokeap_section_levels');
+		if (  get_option( 'keap_access_token' ) ) {
+			add_settings_section( 'pmprokeap_section_levels', 'Levels Tags', 'pmprokeap_section_levels', 'pmprokeap_options' );
+		}
 	
 		if ( isset($_GET['action']) && $_GET['action'] == 'authorize_keap' ) {
 			$keap = PMProKeap_Api_Wrapper::get_instance();
@@ -119,7 +111,7 @@
 		}
 
 		// Handle the OAuth callback
-		if ( isset( $_GET['page'] ) && $_GET['page'] == 'pmprokeap_options' && isset( $_GET['code'] ) ) {
+		if ( isset( $_GET['page'] ) && $_GET['page'] == 'pmpro-keap' && isset( $_GET['code'] ) ) {
 			$keap = PMProKeap_Api_Wrapper::get_instance();
 			$authorization_code = $_GET['code'];
 			$token_response = $keap->pmprokeap_request_token( $authorization_code );
@@ -135,7 +127,7 @@
 			}
 
 			// Redirect to the settings page after processing
-			wp_redirect(admin_url('admin.php?page=pmprokeap_options'));
+			wp_redirect( admin_url( 'admin.php?page=pmpro-keap' ) );
 			exit;
 		}
 
@@ -275,29 +267,11 @@
 	function pmprokeap_get_tags() {
 		$keap = PMProKeap_Api_Wrapper::get_instance();
 		$tags = $keap->pmprokeap_get_tags();
-		return $tags['tags'];
-	}
-
-	/**
-	 * Show either or not PMPro is active
-	 *
-	 * @since TBD 
-	 */
-	function pmprokeap_pmpro_active() {
-		// Check if PMPro is active
-		if ( function_exists( 'pmpro_getAllLevels' ) ) {
-			?>
-		<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-active' ) ?>">
-			<?php esc_html_e( 'Active', 'pmpro-keap' ); ?>
-		</span>
-			<?php
-		 return;
+		//bail if no tags
+		if( empty( $tags[ 'tags' ] ) ) {
+			return array();
 		}
-		?>
-		<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-inactive' ) ?>">
-			<?php esc_html_e( 'Not Active', 'pmpro-keap' ); ?>
-		</span>		
-		<?php
+		return $tags['tags'];
 	}
 
 	/**
@@ -306,19 +280,22 @@
 	 * @since TBD
 	 */
 	function pmprokeap_keap_authorized() {
-		$accessToken = get_option( 'pmprokeap_access_token' );
+		$accessToken = get_option( 'keap_access_token' );
 		if ( $accessToken ) {
 			?>
-			<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-active' ) ?>">
+			<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-active pmpro-keap-tag' ) ?>">
 				<?php esc_html_e( 'Authorized', 'pmpro-keap' ); ?>
 			</span>
 			<?php
 		return;
 		} 
 		?>
-			<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-inactive' ) ?>">
-				<?php esc_html_e( 'Not Authorized', 'pmpro-keap' ); ?>
-			</span>
+		<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-inactive pmpro-keap-tag' ) ?>">
+			<?php esc_html_e( 'Not Authorized', 'pmpro-keap' ); ?>
+		</span>
+		<a href="<?php echo esc_url( admin_url( 'admin.php?page=pmpro-keap&action=authorize_keap' ) ); ?>" class="button button-secondary">
+			<?php esc_html_e( 'Authorize with Keap', 'pmpro-keap' ) ?>
+
 		<?php
 	}
 ?>

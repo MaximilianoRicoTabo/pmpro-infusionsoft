@@ -15,7 +15,7 @@ class PMProKeap_Api_Wrapper {
 	const AUTHORIZATION_URL = 'https://accounts.infusionsoft.com/app/oauth/authorize';
 	const TOKEN_URL = 'https://api.infusionsoft.com/token';
 	const BASE_API_URL = 'https://api.infusionsoft.com/crm/rest/v1/';
-	const REDIRECT_URI = 'options-general.php?page=pmprokeap_options';
+	const REDIRECT_URI = 'admin.php?page=pmpro-keap';
 	
 	/**
 	 * Constructor
@@ -155,7 +155,9 @@ class PMProKeap_Api_Wrapper {
 	
 				$response = $this->pmprokeap_make_curl_request( $url, $method, $data, $headers );
 			} else {
-				// Handle the case where the refresh token is also invalid
+				//It seems that the refresh token is not valid anymore, we need to re-authenticate
+				//empty the token from the options
+				update_option( 'keap_access_token', '' );
 				return $refresh_response;
 			}
 		}
@@ -250,7 +252,6 @@ class PMProKeap_Api_Wrapper {
 		$this->token = $token;
 	}
 
-
 	/**
 	 * Make a cURL request.
 	 *
@@ -268,7 +269,12 @@ class PMProKeap_Api_Wrapper {
 			case 'POST':
 				curl_setopt( $curl_handler, CURLOPT_POST, 1 );
 				if ( $data ) {
-					curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, json_encode( $data ) );
+					// Check if Content-Type is application/x-www-form-urlencoded
+					if (in_array('Content-Type: application/x-www-form-urlencoded', $headers)) {
+						curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, $data );
+					} else {
+						curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, json_encode( $data ) );
+					}
 				}
 				break;
 			case 'PUT':
