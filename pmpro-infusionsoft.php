@@ -5,24 +5,20 @@ Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-infusionsoft-integr
 Description: Sync your WordPress users and members with Infusionsoft contacts.
 Version: 1.4
 Author: Paid Memberships Pro
+Text Domain: pmpro-keap
+Domain Path: /languages
 Author URI: https://www.paidmembershipspro.com/
 */
 
 
-/*
-	Copyright 2011	Stranger Studios	(email : jason@strangerstudios.com)
-	GPLv2 Full license details in license.txt
-*/
 define('PMPRO_INFUSIONSOFT_DIR', dirname(__FILE__));
 
 define( 'PMPROKEAP_DIR', dirname( __FILE__ ) );
 
 define( 'PMPRO_KEAP_VERSION', '0.1' );
 
-require_once PMPROKEAP_DIR . '/includes/settings.php';
-
-//Require API wrapper class in classes folder
-include_once( PMPRO_INFUSIONSOFT_DIR . '/classes/class-pmprokeap-api-wrapper.php' );
+	require_once PMPROKEAP_DIR . '/includes/settings.php';
+	include_once( PMPRO_INFUSIONSOFT_DIR . '/classes/class-pmprokeap-api-wrapper.php' );
 
 global $pmprois_error_msg;
 
@@ -32,7 +28,8 @@ function pmprokeap_init() {
 	add_action( 'user_register', 'pmprokeap_user_register', 10, 1 );
 	add_action( 'pmpro_after_change_membership_level', 'pmprokeap_pmpro_after_change_membership_level', 10, 2 );
 	add_action( 'profile_update',  'pmprokeap_profile_update', 10, 2);
-	//add_action( 'pmpro_after_checkout', 'pmprokeap_pmpro_after_checkout', 30, 2 );
+
+
 }
 
 add_action( 'init', 'pmprokeap_init' );

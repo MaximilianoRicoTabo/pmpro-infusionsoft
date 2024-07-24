@@ -11,8 +11,9 @@
 	 *
 	 */
 	function pmprokeap_admin_add_page() {
-		$keap_integration_menu_text = __( 'Keap Integration', 'pmpro-keap' );
-		add_submenu_page( 'pmpro-dashboard', $keap_integration_menu_text, $keap_integration_menu_text, 'manage_options', 'pmpro-keap', 'pmprokeap_options_page' );
+		$keap_integration_menu_text = __( 'Keap', 'pmpro-keap' );
+		add_submenu_page( 'pmpro-dashboard', $keap_integration_menu_text, $keap_integration_menu_text, 'manage_options',
+			'pmpro-keap', 'pmprokeap_options_page' );
 	}
 
 	function pmprokeap_admin_bar_menu_add_page() {
@@ -21,7 +22,7 @@
 			return;
 		}
 		global $wp_admin_bar;
-		$keap_integration_menu_text = __( 'Keap Integration', 'pmpro-keap' );
+		$keap_integration_menu_text = __( 'Keap', 'pmpro-keap' );
 		$wp_admin_bar->add_menu( array(
 			'id' => 'pmpro-keap',
 			'title' => $keap_integration_menu_text,
@@ -40,49 +41,8 @@
 	 * @return array $options
 	 */
 	function pmprokeap_options_page() {
-		global  $msg, $msgt;
-
-		$options = get_option( 'pmprokeap_options' );
-
-		if( ! empty( $options[ 'api_key' ] ) ) {
-			$api_key = $options[ 'api_key' ];
-		}
-
-		if( ! empty( $options[ 'api_secret' ] ) ) {
-			$api_secret = $options[ 'api_secret' ];
-		}
-
-		// Retrieve stored access token
-		$accessToken = get_option( 'keap_access_token' );
-
-		?>
-		<div class="wrap">
-			<div id="icon-options-general" class="icon32"><br></div>
-			<h2><?php esc_html_e( 'Keap Integration Options and Settings', 'pmpro-keap' );?></h2>
-
-			<?php if ( ! empty( $msg ) ) { ?>
-				<div class="message <?php echo esc_attr( $msgt ); ?>"><p><?php echo esc_html( $msg ); ?></p></div>
-			<?php } ?>
-
-			<form action="options.php" method="post">
-		<?php
-				settings_fields( 'pmprokeap_options' );
-				do_settings_sections( 'pmprokeap_options' );
-				?>
-				<p class="submit topborder">
-					<input name="submit" type="submit" class="button-primary" value="<?php esc_html_e('Save Settings', 'pmpro-keap');?>" />
-				</p>
-				<?php if ( !$accessToken ) { ?>
-					<p><?php esc_html_e( 'You need to authorize with Keap to fetch tags.', 'pmpro-keap' ) ?></p>
-				<?php } ?>
-			</form>
-		</div>
-		<script>
-			jQuery( document ).ready( function( $ ) {
-				$( 'select' ).select2();
-			});
-		</script>
-		<?php
+		require_once( PMPRO_INFUSIONSOFT_DIR . '/adminpages/settings.php' );
+	
 	}
 
 	/**
@@ -130,7 +90,6 @@
 			wp_redirect( admin_url( 'admin.php?page=pmpro-keap' ) );
 			exit;
 		}
-
 	}
 
 	add_action("admin_init", "pmprokeap_admin_init");
