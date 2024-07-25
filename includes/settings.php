@@ -1,7 +1,7 @@
 <?php 
 
 	//Require API wrapper class in classes folder
-	include_once( PMPRO_INFUSIONSOFT_DIR . '/classes/class-pmprokeap-api-wrapper.php' );
+	include_once( PMPROKEAP_DIR . '/classes/class-pmprokeap-api-wrapper.php' );
 
 	/**
 	 * Add the options page
@@ -41,7 +41,7 @@
 	 * @return array $options
 	 */
 	function pmprokeap_options_page() {
-		require_once( PMPRO_INFUSIONSOFT_DIR . '/adminpages/settings.php' );
+		require_once( PMPROKEAP_DIR . '/adminpages/settings.php' );
 	
 	}
 

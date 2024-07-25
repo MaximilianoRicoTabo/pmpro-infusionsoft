@@ -10,15 +10,12 @@ Domain Path: /languages
 Author URI: https://www.paidmembershipspro.com/
 */
 
-
-define('PMPRO_INFUSIONSOFT_DIR', dirname(__FILE__));
-
 define( 'PMPROKEAP_DIR', dirname( __FILE__ ) );
 
 define( 'PMPRO_KEAP_VERSION', '0.1' );
 
 	require_once PMPROKEAP_DIR . '/includes/settings.php';
-	include_once( PMPRO_INFUSIONSOFT_DIR . '/classes/class-pmprokeap-api-wrapper.php' );
+	include_once( PMPROKEAP_DIR . '/classes/class-pmprokeap-api-wrapper.php' );
 
 global $pmprois_error_msg;
 
