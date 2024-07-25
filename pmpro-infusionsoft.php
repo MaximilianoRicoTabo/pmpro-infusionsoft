@@ -10,34 +10,34 @@ Domain Path: /languages
 Author URI: https://www.paidmembershipspro.com/
 */
 
-define( 'PMPROKEAP_DIR', dirname( __FILE__ ) );
+define( 'PMPRO_KEAP_DIR', dirname( __FILE__ ) );
 
 define( 'PMPRO_KEAP_VERSION', '0.1' );
 
-	require_once PMPROKEAP_DIR . '/includes/settings.php';
-	include_once( PMPROKEAP_DIR . '/classes/class-pmprokeap-api-wrapper.php' );
+	require_once PMPRO_KEAP_DIR . '/includes/settings.php';
+	include_once( PMPRO_KEAP_DIR . '/classes/class-pmpro-keap-api-wrapper.php' );
 
 global $pmprois_error_msg;
 
 //init
-function pmprokeap_init() {
+function pmpro_keap_init() {
 
-	add_action( 'user_register', 'pmprokeap_user_register', 10, 1 );
-	add_action( 'pmpro_after_change_membership_level', 'pmprokeap_pmpro_after_change_membership_level', 10, 2 );
-	add_action( 'profile_update',  'pmprokeap_profile_update', 10, 2);
+	add_action( 'user_register', 'pmpro_keap_user_register', 10, 1 );
+	add_action( 'pmpro_after_change_membership_level', 'pmpro_keap_pmpro_after_change_membership_level', 10, 2 );
+	add_action( 'profile_update',  'pmpro_keap_profile_update', 10, 2);
 
 
 }
 
-add_action( 'init', 'pmprokeap_init' );
+add_action( 'init', 'pmpro_keap_init' );
 
 //Enqueue assets
 function pmprois_enqueue_select2( $hook ) {
-	// only include on the PMPro Infusionsoft settings page
-	if( !empty( $_REQUEST['page'] ) && $_REQUEST['page'] == 'pmprokeap_options' ) {
+	// only include on the PMPro Keap settings page
+	if( !empty( $_REQUEST['page'] ) && $_REQUEST['page'] == 'pmpro-keap' ) {
 		wp_enqueue_style('select2', plugins_url('css/select2.min.css', __FILE__), '', '4.0.3', 'screen');
 		wp_enqueue_script('select2', plugins_url('js/select2.min.js', __FILE__), array( 'jquery' ), '4.0.3' );
-		wp_enqueue_style( 'pmprokeap', plugins_url( 'css/admin.css', __FILE__ ), '', PMPRO_KEAP_VERSION, 'screen' );
+		wp_enqueue_style( 'pmpro_keap', plugins_url( 'css/admin.css', __FILE__ ), '', PMPRO_KEAP_VERSION, 'screen' );
 	}
 }
 add_action( 'admin_enqueue_scripts', 'pmprois_enqueue_select2' );
@@ -51,12 +51,12 @@ add_action( 'admin_enqueue_scripts', 'pmprois_enqueue_select2' );
  * @return int The contact ID of the contact in keap.
  * @since TBD
  */
-function pmprokeap_update_keap_contact( $user ) {
+function pmpro_keap_update_keap_contact( $user ) {
 	$levels = pmpro_getMembershipLevelsForUser( $user->ID );
-    $options = get_option( 'pmprokeap_options' );
+    $options = get_option( 'pmpro_keap_options' );
 
-	$keap = PMProKeap_Api_Wrapper::get_instance();
-    $response = $keap->pmprokeap_get_contact_by_email( $user->user_email );
+	$keap = PMPro_Keap_Api_Wrapper::get_instance();
+    $response = $keap->pmpro_keap_get_contact_by_email( $user->user_email );
 	//Get an array of ids from $tags which is a value, key array
 	//array_map(function($item) {	return $item['id'];}, $example2);
 
@@ -64,12 +64,12 @@ function pmprokeap_update_keap_contact( $user ) {
 	//The user doesn't exist in keap. Add them.
     if(  $response[ 'count' ] == 0 ) {
 		//add the contact. 
-        $response = $keap->pmprokeap_add_contact( $user );
+        $response = $keap->pmpro_keap_add_contact( $user );
 		$contact_id = $response[ 'id' ];
     } else {
 		//already exists in keap. update the contact
         $contact_id = $response[ 'contacts' ][ 0 ][ 'id'];
-		$keap->pmprokeap_update_contact( $contact_id, $user );
+		$keap->pmpro_keap_update_contact( $contact_id, $user );
     }
 
 	//Get the tags from the options and user levels
@@ -82,7 +82,7 @@ function pmprokeap_update_keap_contact( $user ) {
 		}
 	}
 	if( ! empty( $tags_id ) ) {
-		$keap->pmprokeap_assign_tags_to_contact( $contact_id, $tags_id );
+		$keap->pmpro_keap_assign_tags_to_contact( $contact_id, $tags_id );
 	}
 
 	return $contact_id;
@@ -95,14 +95,14 @@ function pmprokeap_update_keap_contact( $user ) {
  * @return void
  * @since TBD
  */
-function pmprokeap_user_register( $user_id ) {
+function pmpro_keap_user_register( $user_id ) {
 	$user = get_userdata( $user_id );
-	pmprokeap_update_keap_contact( $user );
+	pmpro_keap_update_keap_contact( $user );
 }
 
- function pmprokeap_pmpro_after_checkout( $user_id, $order ) {
+ function pmpro_keap_pmpro_after_checkout( $user_id, $order ) {
 	$user = get_userdata( $user_id );
-	pmprokeap_update_keap_contact( $user );
+	pmpro_keap_update_keap_contact( $user );
 }
 
 /**
@@ -113,15 +113,15 @@ function pmprokeap_user_register( $user_id ) {
  * @return void
  * @since TBD
  */
-function pmprokeap_pmpro_after_change_membership_level( $level_id, $user_id ) {
+function pmpro_keap_pmpro_after_change_membership_level( $level_id, $user_id ) {
 	$user = get_userdata( $user_id );
-	pmprokeap_update_keap_contact( $user );
+	pmpro_keap_update_keap_contact( $user );
 }
 
 //update contact in Keap if a user profile is changed in WordPress
-function pmprokeap_profile_update( $user_id, $old_user_data ) {
+function pmpro_keap_profile_update( $user_id, $old_user_data ) {
     $user = get_userdata( $user_id );
-    pmprokeap_update_keap_contact( $user );
+    pmpro_keap_update_keap_contact( $user );
 }
 
 /*

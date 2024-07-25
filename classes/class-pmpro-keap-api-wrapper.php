@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PMProKeap API Wrapper
+ * PMPro_Keap API Wrapper
  */
-class PMProKeap_Api_Wrapper {
+class PMPro_Keap_Api_Wrapper {
 
 	private $clientId;
 	private $clientSecret;
@@ -21,22 +21,26 @@ class PMProKeap_Api_Wrapper {
 	 * Constructor
 	 */
 	public function __construct() {
-		$options = get_option( 'pmprokeap_options' );
+		$options = get_option( 'pmpro_keap_options' );
+		if ( ! empty( $options ) ) {
+		
+		
 		$this->clientId = $options[ 'api_key' ];
 		$this->clientSecret = $options[ 'api_secret' ];
 		$this->redirectUri = admin_url( self::REDIRECT_URI );
 		$this->token = get_option( 'keap_access_token' );
+		}
 	}
 
 	/**
 	 * Singleton pattern, return a new instance only if not already created.
 	 *
-	 * @return PMProKeap_Api_Wrapper The instance. 
+	 * @return PMPro_Keap_Api_Wrapper The instance. 
 	 * @since TBD
 	 */
 	public static function get_instance() {
 		if (self::$instance == null) {
-			self::$instance = new PMProKeap_Api_Wrapper();
+			self::$instance = new PMPro_Keap_Api_Wrapper();
 		}
 		return self::$instance;
 	}
@@ -47,7 +51,7 @@ class PMProKeap_Api_Wrapper {
 	 * @return string The URL to request authorization.
 	 * @since TBD
 	 */
-	public function pmprokeap_get_authorization_url() {
+	public function pmpro_keap_get_authorization_url() {
 		$query = http_build_query([
 			'client_id' => $this->clientId,
 			'redirect_uri' => $this->redirectUri,
@@ -65,7 +69,7 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The response.
 	 * @since TBD
 	 */
-	public function pmprokeap_request_token( $authorizationCode ) {
+	public function pmpro_keap_request_token( $authorizationCode ) {
 
 		$postFields = http_build_query([
 			'grant_type' => 'authorization_code',
@@ -80,7 +84,7 @@ class PMProKeap_Api_Wrapper {
 			'Authorization: Basic ' . base64_encode($this->clientId . ':' . $this->clientSecret)
 		];
 
-		$response = $this->pmprokeap_make_curl_request(self::TOKEN_URL, 'POST', $postFields, $headers);
+		$response = $this->pmpro_keap_make_curl_request(self::TOKEN_URL, 'POST', $postFields, $headers);
 
 		if ( isset( $response[ 'access_token' ] ) ) {
 			$this->token = $response[ 'access_token' ];
@@ -98,7 +102,7 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The response.
 	 * @since TBD
 	 */
-	public function pmprokeap_refresh_token( $refresh_token ) {
+	public function pmpro_keap_refresh_token( $refresh_token ) {
         $postFields = http_build_query([
             'grant_type' => 'refresh_token',
             'refresh_token' => $refresh_token,
@@ -111,7 +115,7 @@ class PMProKeap_Api_Wrapper {
             'Authorization: Basic ' . base64_encode( $this->clientId . ':' . $this->clientSecret )
         ];
 
-        $response = $this->pmprokeap_make_curl_request( self::TOKEN_URL, 'POST', $postFields, $headers );
+        $response = $this->pmpro_keap_make_curl_request( self::TOKEN_URL, 'POST', $postFields, $headers );
 
         if ( isset($response['access_token'] ) ) {
             $this->token = $response[ 'access_token' ];
@@ -131,20 +135,20 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The response.
 	 * @since TBD
 	 */
-	private function pmprokeap_make_request( $method, $endpoint, $data = null ) {
+	private function pmpro_keap_make_request( $method, $endpoint, $data = null ) {
 		$url = self::BASE_API_URL . $endpoint;
 		$headers = [
             "Authorization: Bearer $this->token",
             "Content-Type: application/json"
         ];
 
-        $response = $this->pmprokeap_make_curl_request( $url, $method, $data, $headers );
+        $response = $this->pmpro_keap_make_curl_request( $url, $method, $data, $headers );
 		$error_codes = array( 'keymanagement.service.access_token_expired', 'keymanagement.service.invalid_access_token' );
 		if ( isset($response['fault']) && 
 		in_array( $response['fault'][ 'detail' ]['errorcode'], $error_codes ) ) {		
 			// Token expired, refresh it
 			$refresh_token = get_option( 'keap_refresh_token' );
-			$refresh_response = $this->pmprokeap_refresh_token( $refresh_token );
+			$refresh_response = $this->pmpro_keap_refresh_token( $refresh_token );
 			if ( isset($refresh_response[ 'access_token' ] ) ) {
 				// Retry the original request with the new token
 				$this->token = $refresh_response[ 'access_token' ];
@@ -153,7 +157,7 @@ class PMProKeap_Api_Wrapper {
 					"Content-Type: application/json"
 				];
 	
-				$response = $this->pmprokeap_make_curl_request( $url, $method, $data, $headers );
+				$response = $this->pmpro_keap_make_curl_request( $url, $method, $data, $headers );
 			} else {
 				//It seems that the refresh token is not valid anymore, we need to re-authenticate
 				//empty the token from the options
@@ -171,8 +175,8 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The tags.
 	 * @since TBD
 	 */
-	public function pmprokeap_get_tags() {
-        return $this->pmprokeap_make_request('GET', 'tags');
+	public function pmpro_keap_get_tags() {
+        return $this->pmpro_keap_make_request('GET', 'tags');
     }
 
 	/**
@@ -182,8 +186,8 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The contact.
 	 * @since TBD
 	 */
-	public function pmprokeap_get_contact_by_email( $email ) {
-		return $this->pmprokeap_make_request( 'GET', 'contacts', ['email' => $email ] );
+	public function pmpro_keap_get_contact_by_email( $email ) {
+		return $this->pmpro_keap_make_request( 'GET', 'contacts', ['email' => $email ] );
 	}
 
 	/**
@@ -193,10 +197,10 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The response.
 	 * @since TBD
 	 */
-	public function pmprokeap_add_contact( $user ) {
+	public function pmpro_keap_add_contact( $user ) {
 		//get user by email
-		$data = $this->pmprokeap_format_contact_request( $user );
-		return $this->pmprokeap_make_request('POST', 'contacts', $data );
+		$data = $this->pmpro_keap_format_contact_request( $user );
+		return $this->pmpro_keap_make_request('POST', 'contacts', $data );
 	}
 
 	/**
@@ -207,9 +211,9 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The response.
 	 * @since TBD
 	 */
-	public function pmprokeap_update_contact( $contact_id, $user ) {
-		$data = $this->pmprokeap_format_contact_request( $user );
-		return $this->pmprokeap_make_request( 'PATCH', 'contacts/' . $contact_id, $data );
+	public function pmpro_keap_update_contact( $contact_id, $user ) {
+		$data = $this->pmpro_keap_format_contact_request( $user );
+		return $this->pmpro_keap_make_request( 'PATCH', 'contacts/' . $contact_id, $data );
 	}
 
 	/**
@@ -220,35 +224,35 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The response.
 	 * @since TBD
 	 */
-	public function pmprokeap_assign_tags_to_contact( $contact_id, $tagIds ) {
+	public function pmpro_keap_assign_tags_to_contact( $contact_id, $tagIds ) {
 		$data = [
 			'tagIds' => $tagIds
 		];
 
-		return $this->pmprokeap_make_request( 'POST', 'contacts/' . $contact_id . '/tags', $data );
+		return $this->pmpro_keap_make_request( 'POST', 'contacts/' . $contact_id . '/tags', $data );
 	}
 
 	//getters for private attributes
-	public function pmprokeap_get_token() {
+	public function pmpro_keap_get_token() {
 		return $this->token;
 	}
 	//getters for private attributes
-	public function pmprokeap_get_clientId() {
+	public function pmpro_keap_get_clientId() {
 		return $this->clientId;
 	}
 
 	//getters for private attributes
-	public function pmprokeap_get_clientSecret() {
+	public function pmpro_keap_get_clientSecret() {
 		return $this->clientSecret;
 	}
 
 	//getters for private attributes
-	public function pmprokeap_get_redirectUri() {
+	public function pmpro_keap_get_redirectUri() {
 		return $this->redirectUri;
 	}
 
 	//getters for private attributes
-	public function pmprokeap_set_token( $token ) {
+	public function pmpro_keap_set_token( $token ) {
 		$this->token = $token;
 	}
 
@@ -262,7 +266,7 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The response.
 	 * @since TBD
 	 */
-	private function pmprokeap_make_curl_request( $url, $method, $data = null, $headers = [] ) {
+	private function pmpro_keap_make_curl_request( $url, $method, $data = null, $headers = [] ) {
 		$curl_handler = curl_init();
 
 		switch ( $method ) {
@@ -320,7 +324,7 @@ class PMProKeap_Api_Wrapper {
 	 * @return array The formatted request.
 	 * @since TBD
 	 */
-	private function pmprokeap_format_contact_request( $user, $data = [] ) {
+	private function pmpro_keap_format_contact_request( $user, $data = [] ) {
 
 		$ret = array (
 			'email_addresses' => [

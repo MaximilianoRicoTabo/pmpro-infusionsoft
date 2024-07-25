@@ -1,7 +1,7 @@
 <?php 
 
 	//Require API wrapper class in classes folder
-	include_once( PMPROKEAP_DIR . '/classes/class-pmprokeap-api-wrapper.php' );
+	include_once( PMPRO_KEAP_DIR . '/classes/class-pmpro-keap-api-wrapper.php' );
 
 	/**
 	 * Add the options page
@@ -10,13 +10,13 @@
 	 * @since TBD
 	 *
 	 */
-	function pmprokeap_admin_add_page() {
+	function pmpro_keap_admin_add_page() {
 		$keap_integration_menu_text = __( 'Keap', 'pmpro-keap' );
 		add_submenu_page( 'pmpro-dashboard', $keap_integration_menu_text, $keap_integration_menu_text, 'manage_options',
-			'pmpro-keap', 'pmprokeap_options_page' );
+			'pmpro-keap', 'pmpro_keap_options_page' );
 	}
 
-	function pmprokeap_admin_bar_menu_add_page() {
+	function pmpro_keap_admin_bar_menu_add_page() {
 		//Bail if can't manage options
 		if( ! current_user_can( 'manage_options' ) ) {
 			return;
@@ -32,16 +32,16 @@
 		) );
 	}
 
-	add_action( 'admin_menu', 'pmprokeap_admin_add_page' );
-	add_action( 'admin_bar_menu', 'pmprokeap_admin_bar_menu_add_page', 1500 );
+	add_action( 'admin_menu', 'pmpro_keap_admin_add_page' );
+	add_action( 'admin_bar_menu', 'pmpro_keap_admin_bar_menu_add_page', 1500 );
 
 	/**
 	 * Get settings options for PMPro Keap and and render the markup to save the options
 	 *
 	 * @return array $options
 	 */
-	function pmprokeap_options_page() {
-		require_once( PMPROKEAP_DIR . '/adminpages/settings.php' );
+	function pmpro_keap_options_page() {
+		require_once( PMPRO_KEAP_DIR . '/adminpages/settings.php' );
 	
 	}
 
@@ -51,35 +51,35 @@
 	 * @return void
 	 * @since TBD
 	 */
-	function pmprokeap_admin_init() {
+	function pmpro_keap_admin_init() {
 		//setup settings
-		register_setting( 'pmprokeap_options', 'pmprokeap_options', 'pmprokeap_options_validate' );
-		add_settings_section( 'pmprokeap_section_general', 'General Settings', 'pmprokeap_section_general', 'pmprokeap_options' );
-		add_settings_field( 'pmprokeap_keap_authorized', 'Keap Authorized', 'pmprokeap_keap_authorized', 'pmprokeap_options', 'pmprokeap_section_general' );
-		add_settings_field( 'pmprokeap_api_key', 'Keap API Key', 'pmprokeap_api_key', 'pmprokeap_options', 'pmprokeap_section_general' );
-		add_settings_field( 'pmprokeap_api_secret', 'Keap Secret Key', 'pmprokeap_secret_key', 'pmprokeap_options', 'pmprokeap_section_general' );
-		add_settings_field( 'pmprokeap_users_tags', 'All Users Tags', 'pmprokeap_users_tags', 'pmprokeap_options', 'pmprois_section_general' );
+		register_setting( 'pmpro_keap_options', 'pmpro_keap_options', 'pmpro_keap_options_validate' );
+		add_settings_section( 'pmpro_keap_section_general', 'General Settings', 'pmpro_keap_section_general', 'pmpro_keap_options' );
+		add_settings_field( 'pmpro_keap_keap_authorized', 'Keap Authorized', 'pmpro_keap_keap_authorized', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_api_key', 'Keap API Key', 'pmpro_keap_api_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_api_secret', 'Keap Secret Key', 'pmpro_keap_secret_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_users_tags', 'All Users Tags', 'pmpro_keap_users_tags', 'pmpro_keap_options', 'pmprois_section_general' );
 		if (  get_option( 'keap_access_token' ) ) {
-			add_settings_section( 'pmprokeap_section_levels', 'Levels Tags', 'pmprokeap_section_levels', 'pmprokeap_options' );
+			add_settings_section( 'pmpro_keap_section_levels', 'Levels Tags', 'pmpro_keap_section_levels', 'pmpro_keap_options' );
 		}
 	
 		if ( isset($_GET['action']) && $_GET['action'] == 'authorize_keap' ) {
-			$keap = PMProKeap_Api_Wrapper::get_instance();
-			$authUrl = $keap->pmprokeap_get_authorization_url();
+			$keap = PMPro_Keap_Api_Wrapper::get_instance();
+			$authUrl = $keap->pmpro_keap_get_authorization_url();
 			header( "Location: $authUrl" );
 			exit;
 		}
 
 		// Handle the OAuth callback
 		if ( isset( $_GET['page'] ) && $_GET['page'] == 'pmpro-keap' && isset( $_GET['code'] ) ) {
-			$keap = PMProKeap_Api_Wrapper::get_instance();
+			$keap = PMPro_Keap_Api_Wrapper::get_instance();
 			$authorization_code = $_GET['code'];
-			$token_response = $keap->pmprokeap_request_token( $authorization_code );
+			$token_response = $keap->pmpro_keap_request_token( $authorization_code );
 
 			if (isset($token_response['access_token'])) {
 				// Store the access token securely
-				update_option('pmprokeap_access_token', $token_response['access_token']);
-				update_option('pmprokeap_refresh_token', $tokenResponse['refresh_token']);
+				update_option('pmpro_keap_access_token', $token_response['access_token']);
+				update_option('pmpro_keap_refresh_token', $tokenResponse['refresh_token']);
 
 			} else {
 				// Handle token request error
@@ -92,7 +92,7 @@
 		}
 	}
 
-	add_action("admin_init", "pmprokeap_admin_init");
+	add_action("admin_init", "pmpro_keap_admin_init");
 
 
 
@@ -101,7 +101,7 @@
 	 *
 	 * @since TBD
 	 */
-	function pmprokeap_section_general() {
+	function pmpro_keap_section_general() {
 		?>
 		<p><?php esc_html_e('Settings for the Keap Integration.', 'pmpro-keap');?></p>
 		<?php
@@ -113,15 +113,15 @@
 	 * @return void
 	 * @since TBD
 	 */
-	function pmprokeap_api_key() {
-		$options = get_option('pmprokeap_options');
+	function pmpro_keap_api_key() {
+		$options = get_option('pmpro_keap_options');
 		if( !empty($options['api_key'] ) ) {
 			$api_key = $options['api_key'];
 		} else {
 			$api_key = "";
 		}
 		?>
-		<input id='pmprokeap_api_key' name='pmprokeap_options[api_key]' size='80' type='text' value='<?php echo esc_attr( $api_key ) ?>' />
+		<input id='pmpro_keap_api_key' name='pmpro_keap_options[api_key]' size='80' type='text' value='<?php echo esc_attr( $api_key ) ?>' />
 	<?php
 	}
 
@@ -131,15 +131,15 @@
 	 * @return void
 	 * @since TBD
 	 */
-	function pmprokeap_secret_key() {
-		$options = get_option('pmprokeap_options');
+	function pmpro_keap_secret_key() {
+		$options = get_option('pmpro_keap_options');
 		if(!empty($options['api_secret'])) {
 			$api_secret = $options['api_secret'];
 		} else {
 			$api_secret = "";
 		}
 		?>
-		<input id='pmprokeap_api_secret' name='pmprokeap_options[api_secret]' size='80' type='text' value='<?php echo esc_attr( $api_secret ) ?>' />
+		<input id='pmpro_keap_api_secret' name='pmpro_keap_options[api_secret]' size='80' type='text' value='<?php echo esc_attr( $api_secret ) ?>' />
 	<?php
 	}
 
@@ -149,7 +149,7 @@
 	 * @return void
 	 * @since TBD
 	 */
-	function pmprokeap_section_levels() {
+	function pmpro_keap_section_levels() {
 		?>
 		<p>
 			<?php esc_html_e('For each level below, choose the tags which should be added 
@@ -158,9 +158,9 @@
 		<table class="<?php echo esc_attr( 'form-table' ) ?>">
 			<?php
 				$levels = pmpro_getAllLevels( true, true );
-				$all_tags = pmprokeap_get_tags();
+				$all_tags = pmpro_keap_get_tags();
 				foreach( $levels as $level ) {
-					$tags = pmprokeap_get_tags_for_level( $level->id );
+					$tags = pmpro_keap_get_tags_for_level( $level->id );
 			?>
 					<tr>
 						<th>
@@ -174,7 +174,7 @@
 									<?php
 								} else {
 									?>
-							<select name="pmprokeap_options[levels][<?php echo esc_attr( $level->id );?>][]" multiple="yes">
+							<select name="pmpro_keap_options[levels][<?php echo esc_attr( $level->id );?>][]" multiple="yes">
 								<?php
 									foreach( $all_tags as $tag ) {
 								?>
@@ -208,8 +208,8 @@
 	 * @return array The tags for the level
 	 * @since TBD
 	 */
-	function pmprokeap_get_tags_for_level( $level_id ) {
-		$options = get_option( 'pmprokeap_options' );
+	function pmpro_keap_get_tags_for_level( $level_id ) {
+		$options = get_option( 'pmpro_keap_options' );
 		if( !empty( $options[ 'levels' ][ $level_id ] ) ) {
 			return $options[ 'levels' ][ $level_id ];
 		} else {
@@ -223,9 +223,9 @@
 	 * @return array The tags.
 	 * @since TBD 
 	 */
-	function pmprokeap_get_tags() {
-		$keap = PMProKeap_Api_Wrapper::get_instance();
-		$tags = $keap->pmprokeap_get_tags();
+	function pmpro_keap_get_tags() {
+		$keap = PMPro_Keap_Api_Wrapper::get_instance();
+		$tags = $keap->pmpro_keap_get_tags();
 		//bail if no tags
 		if( empty( $tags[ 'tags' ] ) ) {
 			return array();
@@ -238,7 +238,7 @@
 	 *
 	 * @since TBD
 	 */
-	function pmprokeap_keap_authorized() {
+	function pmpro_keap_keap_authorized() {
 		$accessToken = get_option( 'keap_access_token' );
 		if ( $accessToken ) {
 			?>
