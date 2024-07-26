@@ -28,7 +28,7 @@ class PMPro_Keap_Api_Wrapper {
 		$this->clientId = $options[ 'api_key' ];
 		$this->clientSecret = $options[ 'api_secret' ];
 		$this->redirectUri = admin_url( self::REDIRECT_URI );
-		$this->token = get_option( 'keap_access_token' );
+		$this->token = get_option( 'pmpro_keap_access_token' );
 		}
 	}
 
@@ -88,8 +88,8 @@ class PMPro_Keap_Api_Wrapper {
 
 		if ( isset( $response[ 'access_token' ] ) ) {
 			$this->token = $response[ 'access_token' ];
-			update_option( 'keap_access_token', $this->token );
-			update_option( 'keap_refresh_token', $response[ 'refresh_token' ] );
+			update_option( 'pmpro_keap_access_token', $this->token );
+			update_option( 'pmpro_keap_refresh_token', $response[ 'refresh_token' ] );
 		}
 
 		return $response;
@@ -119,11 +119,11 @@ class PMPro_Keap_Api_Wrapper {
 
         if ( isset($response['access_token'] ) ) {
             $this->token = $response[ 'access_token' ];
-            update_option( 'keap_access_token', $this->token );
-            update_option( 'keap_refresh_token', $response[ 'refresh_token' ] );
+            update_option( 'pmpro_keap_access_token', $this->token );
+            update_option( 'pmpro_keap_refresh_token', $response[ 'refresh_token' ] );
         } else {
 			// Seems we lost authorization, clear the token
-			update_option( 'keap_access_token', '' );
+			update_option( 'pmpro_keap_access_token', '' );
 		}
 
         return $response;
@@ -150,7 +150,7 @@ class PMPro_Keap_Api_Wrapper {
 		if ( isset($response['fault']) && 
 		in_array( $response['fault'][ 'detail' ]['errorcode'], $error_codes ) ) {		
 			// Token expired, refresh it
-			$refresh_token = get_option( 'keap_refresh_token' );
+			$refresh_token = get_option( 'pmpro_keap_refresh_token' );
 			$refresh_response = $this->pmpro_keap_refresh_token( $refresh_token );
 			if ( isset($refresh_response[ 'access_token' ] ) ) {
 				// Retry the original request with the new token
@@ -164,7 +164,7 @@ class PMPro_Keap_Api_Wrapper {
 			} else {
 				//It seems that the refresh token is not valid anymore, we need to re-authenticate
 				//empty the token from the options
-				update_option( 'keap_access_token', '' );
+				update_option( 'pmpro_keap_access_token', '' );
 				return $refresh_response;
 			}
 		}

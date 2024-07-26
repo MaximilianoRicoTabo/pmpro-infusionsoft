@@ -49,7 +49,7 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 		}
 
 		// Retrieve stored access token
-		$accessToken = get_option( 'keap_access_token' );
+		$accessToken = get_option( 'pmpro_keap_access_token' );
 
 		?>
 	 	<div class="wrap">

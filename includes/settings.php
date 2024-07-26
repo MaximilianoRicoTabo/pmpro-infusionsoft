@@ -59,7 +59,7 @@
 		add_settings_field( 'pmpro_keap_api_key', 'Keap API Key', 'pmpro_keap_api_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
 		add_settings_field( 'pmpro_keap_api_secret', 'Keap Secret Key', 'pmpro_keap_secret_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
 		add_settings_field( 'pmpro_keap_users_tags', 'All Users Tags', 'pmpro_keap_users_tags', 'pmpro_keap_options', 'pmprois_section_general' );
-		if (  get_option( 'keap_access_token' ) ) {
+		if (  get_option( 'pmpro_keap_access_token' ) ) {
 			add_settings_section( 'pmpro_keap_section_levels', 'Levels Tags', 'pmpro_keap_section_levels', 'pmpro_keap_options' );
 		}
 	
@@ -114,7 +114,7 @@
 	 * @since TBD
 	 */
 	function pmpro_keap_api_key() {
-		$options = get_option('pmpro_keap_options');
+		$options = get_option( 'pmpro_keap_options' );
 		if( !empty($options['api_key'] ) ) {
 			$api_key = $options['api_key'];
 		} else {
@@ -132,7 +132,7 @@
 	 * @since TBD
 	 */
 	function pmpro_keap_secret_key() {
-		$options = get_option('pmpro_keap_options');
+		$options = get_option( 'pmpro_keap_options' );
 		if(!empty($options['api_secret'])) {
 			$api_secret = $options['api_secret'];
 		} else {
@@ -239,7 +239,7 @@
 	 * @since TBD
 	 */
 	function pmpro_keap_keap_authorized() {
-		$accessToken = get_option( 'keap_access_token' );
+		$accessToken = get_option( 'pmpro_keap_access_token' );
 		if ( $accessToken ) {
 			?>
 			<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-active pmpro-keap-tag' ) ?>">
