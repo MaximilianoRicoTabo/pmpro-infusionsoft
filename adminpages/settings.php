@@ -11,7 +11,7 @@ global $msg, $msgt;
 if ( !empty( $_REQUEST['savesettings'] ) && ( empty( $_REQUEST[ 'pmpro_keap_nonce' ] ) 
 || !check_admin_referer( 'savesettings', 'pmpro_keap_nonce' ) ) ) {
 $msg = -1;
-$msgt = __( "Are you sure you want to do that? Try again.", 'paid-memberships-pro' );
+$msgt = __( "Are you sure you want to do that? Try again.", 'pmpro-infusionsoft' );
 unset( $_REQUEST[ 'savesettings' ] );
 }
 
@@ -20,7 +20,7 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 
 	// Assume success.
 	$msg = true;
-	$msgt = __("Your security settings have been updated.", 'paid-memberships-pro' );
+	$msgt = __("Your security settings have been updated.", 'pmpro-infusionsoft' );
 	//save options
 	$options = get_option( 'pmpro_keap_options' );
 	$options[ 'api_key' ] = sanitize_text_field( $_REQUEST[ 'pmpro_keap_options' ][ 'api_key' ] );
@@ -29,7 +29,7 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 
 	if(  ! empty( $_REQUEST[ 'pmpro_keap_options' ][ 'levels' ] ) ) {
 		foreach( $_REQUEST[ 'pmpro_keap_options' ][ 'levels' ] as $level_id => $level_tags ) {
-			$options[ 'levels' ][ $level_id ] = $level_tags;
+			$options[ 'levels' ][ $level_id ] = sanitize_text_field( $level_tags );
 		}
 	}
 	//save the options	
@@ -54,7 +54,7 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 		?>
 	 	<div class="wrap">
 	 		<div id="icon-options-general" class="icon32"><br></div>
-			<h2><?php esc_html_e( 'Keap', 'pmpro-keap' );?></h2>
+			<h2><?php esc_html_e( 'Keap', 'pmpro-infusionsoft' );?></h2>
 
 		<form action="" method="post" enctype="multipart/form-data">
 	 	<?php
@@ -62,10 +62,10 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 				do_settings_sections( 'pmpro_keap_options' );
 				?>
 			<p class="submit topborder">
-	 				<input name="savesettings" type="submit" class="button-primary" value="<?php esc_html_e('Save Settings', 'pmpro-keap');?>" />
+	 				<input name="savesettings" type="submit" class="button-primary" value="<?php esc_html_e('Save Settings', 'pmpro-infusionsoft');?>" />
 	 			</p>
 	 			<?php if ( !$accessToken ) { ?>
-			<p><?php esc_html_e( 'You need to authorize with Keap to fetch tags.', 'pmpro-keap' ) ?></p>
+			<p><?php esc_html_e( 'You need to authorize with Keap to fetch tags.', 'pmpro-infusionsoft' ) ?></p>
 	 			<?php } ?>
 	 		</form>
 	 	</div>

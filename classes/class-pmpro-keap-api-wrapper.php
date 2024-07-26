@@ -87,9 +87,9 @@ class PMPro_Keap_Api_Wrapper {
 		$response = $this->pmpro_keap_make_curl_request(self::TOKEN_URL, 'POST', $postFields, $headers);
 
 		if ( isset( $response[ 'access_token' ] ) ) {
-			$this->token = $response[ 'access_token' ];
+			$this->token = sanitize_text_field( $response[ 'access_token' ] );
 			update_option( 'pmpro_keap_access_token', $this->token );
-			update_option( 'pmpro_keap_refresh_token', $response[ 'refresh_token' ] );
+			update_option( 'pmpro_keap_refresh_token', sanitize_text_field( $response[ 'refresh_token' ] ) );
 		}
 
 		return $response;
@@ -117,10 +117,10 @@ class PMPro_Keap_Api_Wrapper {
 
         $response = $this->pmpro_keap_make_curl_request( self::TOKEN_URL, 'POST', $postFields, $headers );
 
-        if ( isset($response['access_token'] ) ) {
-            $this->token = $response[ 'access_token' ];
+        if ( isset( $response[ 'access_token' ] ) ) {
+            $this->token = sanitize_text_field( $response[ 'access_token' ] );
             update_option( 'pmpro_keap_access_token', $this->token );
-            update_option( 'pmpro_keap_refresh_token', $response[ 'refresh_token' ] );
+            update_option( 'pmpro_keap_refresh_token', sanitize_text_field( $response[ 'refresh_token' ] ) );
         } else {
 			// Seems we lost authorization, clear the token
 			update_option( 'pmpro_keap_access_token', '' );

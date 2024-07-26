@@ -11,7 +11,7 @@
 	 *
 	 */
 	function pmpro_keap_admin_add_page() {
-		$keap_integration_menu_text = __( 'Keap', 'pmpro-keap' );
+		$keap_integration_menu_text = __( 'Keap', 'pmpro-infusionsoft' );
 		add_submenu_page( 'pmpro-dashboard', $keap_integration_menu_text, $keap_integration_menu_text, 'manage_options',
 			'pmpro-keap', 'pmpro_keap_options_page' );
 	}
@@ -22,7 +22,7 @@
 			return;
 		}
 		global $wp_admin_bar;
-		$keap_integration_menu_text = __( 'Keap', 'pmpro-keap' );
+		$keap_integration_menu_text = __( 'Keap', 'pmpro-infusionsoft' );
 		$wp_admin_bar->add_menu( array(
 			'id' => 'pmpro-keap',
 			'title' => $keap_integration_menu_text,
@@ -52,15 +52,23 @@
 	 * @since TBD
 	 */
 	function pmpro_keap_admin_init() {
-		//setup settings
+		//setup 
+		$translated_keap_settings = __( 'General Settings', 'pmpro-infusionsoft' );
+		$translated_keap_authorized_label = __( 'Keap Authorized', 'pmpro-infusionsoft' );
+		$translated_keap_api_key_label = __( 'Keap API Key', 'pmpro-infusionsoft' );
+		$translated_keap_secret_key_label = __( 'Keap Secret Key', 'pmpro-infusionsoft' );
+		$translated_keap_users_tags_label = __( 'All Users Tags', 'pmpro-infusionsoft' );
+		$translated_keap_levels_tags_label = __( 'Levels Tags', 'pmpro-infusionsoft' );
+
+
 		register_setting( 'pmpro_keap_options', 'pmpro_keap_options', 'pmpro_keap_options_validate' );
-		add_settings_section( 'pmpro_keap_section_general', 'General Settings', 'pmpro_keap_section_general', 'pmpro_keap_options' );
-		add_settings_field( 'pmpro_keap_keap_authorized', 'Keap Authorized', 'pmpro_keap_keap_authorized', 'pmpro_keap_options', 'pmpro_keap_section_general' );
-		add_settings_field( 'pmpro_keap_api_key', 'Keap API Key', 'pmpro_keap_api_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
-		add_settings_field( 'pmpro_keap_api_secret', 'Keap Secret Key', 'pmpro_keap_secret_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
-		add_settings_field( 'pmpro_keap_users_tags', 'All Users Tags', 'pmpro_keap_users_tags', 'pmpro_keap_options', 'pmprois_section_general' );
+		add_settings_section( 'pmpro_keap_section_general', $translated_keap_settings, 'pmpro_keap_section_general', 'pmpro_keap_options' );
+		add_settings_field( 'pmpro_keap_keap_authorized', $translated_keap_authorized_label, 'pmpro_keap_keap_authorized', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_api_key', $translated_keap_api_key_label, 'pmpro_keap_api_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_api_secret', $translated_keap_secret_key_label, 'pmpro_keap_secret_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_users_tags', $translated_keap_users_tags_label, 'pmpro_keap_users_tags', 'pmpro_keap_options', 'pmprois_section_general' );
 		if (  get_option( 'pmpro_keap_access_token' ) ) {
-			add_settings_section( 'pmpro_keap_section_levels', 'Levels Tags', 'pmpro_keap_section_levels', 'pmpro_keap_options' );
+			add_settings_section( 'pmpro_keap_section_levels', $translated_keap_levels_tags_label, 'pmpro_keap_section_levels', 'pmpro_keap_options' );
 		}
 	
 		if ( isset($_GET['action']) && $_GET['action'] == 'authorize_keap' ) {
@@ -76,10 +84,10 @@
 			$authorization_code = $_GET['code'];
 			$token_response = $keap->pmpro_keap_request_token( $authorization_code );
 
-			if (isset($token_response['access_token'])) {
-				// Store the access token securely
-				update_option('pmpro_keap_access_token', $token_response['access_token']);
-				update_option('pmpro_keap_refresh_token', $tokenResponse['refresh_token']);
+			if ( isset($token_response['access_token'] ) ) {
+				//sanitize data and save options
+				update_option( 'pmpro_keap_access_token', sanitize_text_field( $token_response['access_token'] ) );
+				update_option( 'pmpro_keap_refresh_token', sanitize_text_field( $tokenResponse['refresh_token'] ) );
 
 			} else {
 				// Handle token request error
@@ -103,7 +111,7 @@
 	 */
 	function pmpro_keap_section_general() {
 		?>
-		<p><?php esc_html_e('Settings for the Keap Integration.', 'pmpro-keap');?></p>
+		<p><?php esc_html_e('Settings for the Keap Integration.', 'pmpro-infusionsoft');?></p>
 		<?php
 	}
 
@@ -153,7 +161,7 @@
 		?>
 		<p>
 			<?php esc_html_e('For each level below, choose the tags which should be added 
-			to the contact when a new user registers or switches levels.', 'pmpro-keap'); ?>
+			to the contact when a new user registers or switches levels.', 'pmpro-infusionsoft'); ?>
 		</p>
 		<table class="<?php echo esc_attr( 'form-table' ) ?>">
 			<?php
@@ -170,7 +178,7 @@
 							<?php
 								if( empty( $all_tags ) ) {
 									?>
-									<p><?php esc_html_e( 'No tags found.', 'pmpro-keap' );?></p>
+									<p><?php esc_html_e( 'No tags found.', 'pmpro-infusionsoft' );?></p>
 									<?php
 								} else {
 									?>
@@ -243,17 +251,17 @@
 		if ( $accessToken ) {
 			?>
 			<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-active pmpro-keap-tag' ) ?>">
-				<?php esc_html_e( 'Authorized', 'pmpro-keap' ); ?>
+				<?php esc_html_e( 'Authorized', 'pmpro-infusionsoft' ); ?>
 			</span>
 			<?php
 		return;
 		} 
 		?>
 		<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-inactive pmpro-keap-tag' ) ?>">
-			<?php esc_html_e( 'Not Authorized', 'pmpro-keap' ); ?>
+			<?php esc_html_e( 'Not Authorized', 'pmpro-infusionsoft' ); ?>
 		</span>
 		<a href="<?php echo esc_url( admin_url( 'admin.php?page=pmpro-keap&action=authorize_keap' ) ); ?>" class="button button-secondary">
-			<?php esc_html_e( 'Authorize with Keap', 'pmpro-keap' ) ?>
+			<?php esc_html_e( 'Authorize with Keap', 'pmpro-infusionsoft' ) ?>
 
 		<?php
 	}
