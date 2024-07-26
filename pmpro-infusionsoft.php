@@ -32,15 +32,13 @@ function pmpro_keap_init() {
 add_action( 'init', 'pmpro_keap_init' );
 
 //Enqueue assets
-function pmprois_enqueue_select2( $hook ) {
+function pmpro_keap_enqueue_css_assets( $hook ) {
 	// only include on the PMPro Keap settings page
 	if( !empty( $_REQUEST['page'] ) && $_REQUEST['page'] == 'pmpro-keap' ) {
-		wp_enqueue_style('select2', plugins_url('css/select2.min.css', __FILE__), '', '4.0.3', 'screen');
-		wp_enqueue_script('select2', plugins_url('js/select2.min.js', __FILE__), array( 'jquery' ), '4.0.3' );
 		wp_enqueue_style( 'pmpro_keap', plugins_url( 'css/admin.css', __FILE__ ), '', PMPRO_KEAP_VERSION, 'screen' );
 	}
 }
-add_action( 'admin_enqueue_scripts', 'pmprois_enqueue_select2' );
+add_action( 'admin_enqueue_scripts', 'pmpro_keap_enqueue_css_assets' );
 
 /**
  * Create or Update a Contact in keap given an email address. May include tags and additional fields.

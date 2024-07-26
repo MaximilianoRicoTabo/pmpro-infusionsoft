@@ -121,7 +121,10 @@ class PMPro_Keap_Api_Wrapper {
             $this->token = $response[ 'access_token' ];
             update_option( 'keap_access_token', $this->token );
             update_option( 'keap_refresh_token', $response[ 'refresh_token' ] );
-        }
+        } else {
+			// Seems we lost authorization, clear the token
+			update_option( 'keap_access_token', '' );
+		}
 
         return $response;
     }
@@ -138,12 +141,12 @@ class PMPro_Keap_Api_Wrapper {
 	private function pmpro_keap_make_request( $method, $endpoint, $data = null ) {
 		$url = self::BASE_API_URL . $endpoint;
 		$headers = [
-            "Authorization: Bearer $this->token",
-            "Content-Type: application/json"
-        ];
+			"Authorization" => "Bearer " . $this->token,
+			"Content-Type" => "application/json"
+		];
 
         $response = $this->pmpro_keap_make_curl_request( $url, $method, $data, $headers );
-		$error_codes = array( 'keymanagement.service.access_token_expired', 'keymanagement.service.invalid_access_token' );
+		$error_codes = array( 'keymanagement.service.access_token_expired', 'keymanagement.service.invalid_access_token', 'keymanagement.service.access_token_not_approved' );
 		if ( isset($response['fault']) && 
 		in_array( $response['fault'][ 'detail' ]['errorcode'], $error_codes ) ) {		
 			// Token expired, refresh it
@@ -153,8 +156,8 @@ class PMPro_Keap_Api_Wrapper {
 				// Retry the original request with the new token
 				$this->token = $refresh_response[ 'access_token' ];
 				$headers = [
-					"Authorization: Bearer $this->token",
-					"Content-Type: application/json"
+					"Authorization" => "Bearer " . $this->token,
+					"Content-Type" => "application/json"
 				];
 	
 				$response = $this->pmpro_keap_make_curl_request( $url, $method, $data, $headers );
@@ -267,53 +270,39 @@ class PMPro_Keap_Api_Wrapper {
 	 * @since TBD
 	 */
 	private function pmpro_keap_make_curl_request( $url, $method, $data = null, $headers = [] ) {
-		$curl_handler = curl_init();
+		$args = [
+			'method'  => $method,
+			'headers' => $headers,
+			'body'    => null,
+		];
 
-		switch ( $method ) {
-			case 'POST':
-				curl_setopt( $curl_handler, CURLOPT_POST, 1 );
-				if ( $data ) {
-					// Check if Content-Type is application/x-www-form-urlencoded
-					if (in_array('Content-Type: application/x-www-form-urlencoded', $headers)) {
-						curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, $data );
+		// Set the body based on Content-Type
+		if ( $data ) {
+			foreach ( $headers as $header ) {
+				if ( strpos( $header, 'Content-Type: application/x-www-form-urlencoded' ) !== false ) {
+					if ( is_array( $data ) ) {
+						$args['body'] = http_build_query( $data );
 					} else {
-						curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, json_encode( $data ) );
+						$args['body'] = $data;
 					}
+				} elseif ( strpos( $header, 'Content-Type: application/json' ) !== false ) {
+					$args['body'] = json_encode( $data );
 				}
-				break;
-			case 'PUT':
-				curl_setopt( $curl_handler, CURLOPT_CUSTOMREQUEST, $method );
-				if ( $data ) {
-					curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, json_encode( $data ) );
-				}
-				break;
-			case 'DELETE':
-				curl_setopt( $curl_handler, CURLOPT_CUSTOMREQUEST, $method );
-				break;
-			case 'PATCH':
-				curl_setopt( $curl_handler, CURLOPT_CUSTOMREQUEST, $method );
-				if ( $data ) {
-					curl_setopt( $curl_handler, CURLOPT_POSTFIELDS, json_encode( $data ) );
-				}
-			case 'GET':
-			default:
-				if ($data) {
-					$url = sprintf( "%s?%s", $url, http_build_query( $data ) );
-				}
-				break;
+			}
 		}
 	
-		curl_setopt( $curl_handler, CURLOPT_URL, $url);
-		curl_setopt( $curl_handler, CURLOPT_HTTPHEADER, $headers );
-		curl_setopt( $curl_handler, CURLOPT_RETURNTRANSFER, 1 );
-		curl_setopt( $curl_handler, CURLOPT_SSL_VERIFYPEER, false ); // Ignore SSL certificate verification
-		curl_setopt( $curl_handler, CURLOPT_HEADER, false );
+		// Make the request
+		$response = wp_remote_request( $url, $args );
 	
-		$result = curl_exec( $curl_handler) ;
+		// Check for errors
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
 	
-		curl_close($curl_handler);
+		// Get the response body
+		$body = wp_remote_retrieve_body( $response );
 	
-		return json_decode( $result, true );
+		return json_decode( $body, true );
 	}
 
 	/**

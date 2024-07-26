@@ -26,9 +26,11 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 	$options[ 'api_key' ] = sanitize_text_field( $_REQUEST[ 'pmpro_keap_options' ][ 'api_key' ] );
 	$options[ 'api_secret' ] = sanitize_text_field( $_REQUEST[ 'pmpro_keap_options' ] [ 'api_secret' ] );
 	//save level options. It must delete the old options and save the new ones
-	$options[ 'levels' ] = array();	
-	foreach( $_REQUEST[ 'pmpro_keap_options' ][ 'levels' ] as $level_id => $level_tags ) {
-		$options[ 'levels' ][ $level_id ] = $level_tags;
+
+	if(  ! empty( $_REQUEST[ 'pmpro_keap_options' ][ 'levels' ] ) ) {
+		foreach( $_REQUEST[ 'pmpro_keap_options' ][ 'levels' ] as $level_id => $level_tags ) {
+			$options[ 'levels' ][ $level_id ] = $level_tags;
+		}
 	}
 	//save the options	
 	update_option( 'pmpro_keap_options', $options );
@@ -67,11 +69,6 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 	 			<?php } ?>
 	 		</form>
 	 	</div>
-	 	<script>
-	 		jQuery( document ).ready( function( $ ) {
-	 			$( 'select' ).select2();
-	 		});
-	 	</script>
 
 		<?php 
 	 	require_once PMPRO_DIR . '/adminpages/admin_footer.php';
