@@ -306,15 +306,13 @@ class PMPro_Keap_Api_Wrapper {
 	}
 
 	/**
-	 * Format the contact request.
 	 *
-	 * @param string $email The email.
+	 * @param WP_User $user The user.
 	 * @param array $data The data.
-	 * @return array The formatted request.
+	 * @return array The formatted contact.
 	 * @since TBD
 	 */
 	private function pmpro_keap_format_contact_request( $user, $data = [] ) {
-
 		$ret = array (
 			'email_addresses' => [
 				[
