@@ -52,7 +52,7 @@ class PMPro_Keap_Api_Wrapper {
 	 * @since TBD
 	 */
 	public function pmpro_keap_get_authorization_url() {
-		$query = http_build_query([
+		$query = build_query([
 			'client_id' => $this->clientId,
 			'redirect_uri' => $this->redirectUri,
 			'response_type' => 'code',
@@ -71,7 +71,7 @@ class PMPro_Keap_Api_Wrapper {
 	 */
 	public function pmpro_keap_request_token( $authorizationCode ) {
 
-		$postFields = http_build_query([
+		$postFields = build_query([
 			'grant_type' => 'authorization_code',
 			'client_id' => $this->clientId,
 			'client_secret' => $this->clientSecret,
@@ -103,7 +103,7 @@ class PMPro_Keap_Api_Wrapper {
 	 * @since TBD
 	 */
 	public function pmpro_keap_refresh_token( $refresh_token ) {
-        $postFields = http_build_query([
+        $postFields = build_query([
             'grant_type' => 'refresh_token',
             'refresh_token' => $refresh_token,
             'client_id' => $this->clientId,
@@ -281,7 +281,7 @@ class PMPro_Keap_Api_Wrapper {
 			foreach ( $headers as $header ) {
 				if ( strpos( $header, 'Content-Type: application/x-www-form-urlencoded' ) !== false ) {
 					if ( is_array( $data ) ) {
-						$args['body'] = http_build_query( $data );
+						$args['body'] = build_query( $data );
 					} else {
 						$args['body'] = $data;
 					}
