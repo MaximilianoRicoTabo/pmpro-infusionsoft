@@ -140,6 +140,7 @@ class PMPro_Keap_Api_Wrapper {
 	 */
 	private function pmpro_keap_make_request( $method, $endpoint, $data = null ) {
 		$url = self::BASE_API_URL . $endpoint;
+
 		$headers = [
 			"Authorization" => "Bearer " . $this->token,
 			"Content-Type" => "application/json"
@@ -285,8 +286,12 @@ class PMPro_Keap_Api_Wrapper {
 					} else {
 						$args['body'] = $data;
 					}
-				} elseif ( strpos( $header, 'Content-Type: application/json' ) !== false ) {
-					$args['body'] = json_encode( $data );
+				} else {
+					if($method === 'POST' || $method === 'PATCH') {
+						$args['body'] = json_encode( $data );
+					} else {
+						$args['body'] = $data;
+					}
 				}
 			}
 		}

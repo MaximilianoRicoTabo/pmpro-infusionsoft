@@ -43,14 +43,22 @@ add_action( 'admin_enqueue_scripts', 'pmpro_keap_enqueue_css_assets' );
 /**
  * Create or Update a Contact in keap given an email address. May include tags and additional fields.
  *
- * @param string $email The email address of the contact.
- * @param array $tags An array of tags to assign to the contact.
- * @param array $additional_fields An array of additional fields to update on the contact.
- * @return int The contact ID of the contact in keap.
+ * @param WP_User $user The user object to add or update in keap.
+ * @param int $level_id The ID of the level the user is changing to.
+ * @param bool $skip_level_check If true, the function will not check for membership levels.
+ * @return int The contact ID in keap.
  * @since TBD
  */
-function pmpro_keap_update_keap_contact( $user ) {
-	$levels = pmpro_getMembershipLevelsForUser( $user->ID );
+function pmpro_keap_update_keap_contact( $user, $level_id = NULL, $skip_level_check = false ) {
+	//Bail if pmpro_getMembershipLevelsForUser doesn't exist
+	if ( ! function_exists( 'pmpro_getMembershipLevelsForUser' ) ) {
+		return;
+	}
+	if( $level_id != NULL ) {
+		$levels = array( pmpro_getLevel( $level_id ) );
+	} else {
+		$levels = pmpro_getMembershipLevelsForUser( $user->ID );
+	}
     $options = get_option( 'pmpro_keap_options' );
 
 	$keap = PMPro_Keap_Api_Wrapper::get_instance();
@@ -70,17 +78,17 @@ function pmpro_keap_update_keap_contact( $user ) {
 		$keap->pmpro_keap_update_contact( $contact_id, $user );
     }
 
-	//Get the tags from the options and user levels
-	//Assign tags to the contact
-	$tags_id = array();
-	foreach( $levels as $level ) {
-		if( !empty( $options[ 'levels' ][ $level->id ] ) ) {
-			//append to the tags_id array
-			$tags_id = array_merge( $tags_id, $options[ 'levels' ][ $level->id ] );
+	if ( ! $skip_level_check ) {
+		$tags_id = array();
+		foreach( $levels as $level ) {
+			if( !empty( $options[ 'levels' ][ $level->id ] ) ) {
+				//append to the tags_id array
+				$tags_id = array_merge( $tags_id, $options[ 'levels' ][ $level->id ] );
+			}
 		}
-	}
-	if( ! empty( $tags_id ) ) {
-		$keap->pmpro_keap_assign_tags_to_contact( $contact_id, $tags_id );
+		if( ! empty( $tags_id ) ) {
+			$keap->pmpro_keap_assign_tags_to_contact( $contact_id, $tags_id );
+		}
 	}
 
 	return $contact_id;
@@ -95,12 +103,12 @@ function pmpro_keap_update_keap_contact( $user ) {
  */
 function pmpro_keap_user_register( $user_id ) {
 	$user = get_userdata( $user_id );
-	pmpro_keap_update_keap_contact( $user );
+	pmpro_keap_update_keap_contact( $user, NULL, true );
 }
 
  function pmpro_keap_pmpro_after_checkout( $user_id, $order ) {
 	$user = get_userdata( $user_id );
-	pmpro_keap_update_keap_contact( $user );
+	pmpro_keap_update_keap_contact( $user, $order->membership_id );
 }
 
 /**
@@ -113,13 +121,13 @@ function pmpro_keap_user_register( $user_id ) {
  */
 function pmpro_keap_pmpro_after_change_membership_level( $level_id, $user_id ) {
 	$user = get_userdata( $user_id );
-	pmpro_keap_update_keap_contact( $user );
+	pmpro_keap_update_keap_contact( $user, $level_id );
 }
 
 //update contact in Keap if a user profile is changed in WordPress
 function pmpro_keap_profile_update( $user_id, $old_user_data ) {
     $user = get_userdata( $user_id );
-    pmpro_keap_update_keap_contact( $user );
+    pmpro_keap_update_keap_contact( $user, NULL, true );
 }
 
 /*
