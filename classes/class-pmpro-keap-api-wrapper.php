@@ -279,19 +279,23 @@ class PMPro_Keap_Api_Wrapper {
 
 		// Set the body based on Content-Type
 		if ( $data ) {
+			// Check if the Content-Type is application/x-www-form-urlencoded
+			$is_urlencoded = false;
 			foreach ( $headers as $header ) {
 				if ( strpos( $header, 'Content-Type: application/x-www-form-urlencoded' ) !== false ) {
-					if ( is_array( $data ) ) {
-						$args['body'] = build_query( $data );
-					} else {
-						$args['body'] = $data;
-					}
+					$is_urlencoded = true;
+					break; // No need to continue the loop once found
+				}
+			}
+
+			// Now handle $args['body'] based on the result
+			if ( $is_urlencoded ) {
+				$args['body'] = is_array( $data ) ? build_query( $data ) : $data;
+			} else {
+				if ( $method === 'POST' || $method === 'PATCH' ) {
+					$args['body'] = json_encode( $data );
 				} else {
-					if($method === 'POST' || $method === 'PATCH') {
-						$args['body'] = json_encode( $data );
-					} else {
-						$args['body'] = $data;
-					}
+					$args['body'] = $data;
 				}
 			}
 		}
@@ -318,6 +322,8 @@ class PMPro_Keap_Api_Wrapper {
 	 * @since TBD
 	 */
 	private function pmpro_keap_format_contact_request( $user, $data = [] ) {
+		//Add a filter to allow other plugins to add more data to the contact
+		$data = apply_filters( 'pmpro_keap_format_contact_request', $data, $user );
 		$ret = array (
 			'email_addresses' => [
 				[
