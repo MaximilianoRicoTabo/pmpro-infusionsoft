@@ -129,7 +129,7 @@
 			$api_key = "";
 		}
 		?>
-		<input id='pmpro_keap_api_key' name='pmpro_keap_options[api_key]' size='80' type='text' value='<?php echo esc_attr( $api_key ) ?>' />
+		<input id='pmpro_keap_api_key' name='pmpro_keap_options[api_key]' size='80' type='password' value='<?php echo esc_attr( $api_key ) ?>' />
 	<?php
 	}
 
@@ -147,7 +147,7 @@
 			$api_secret = "";
 		}
 		?>
-		<input id='pmpro_keap_api_secret' name='pmpro_keap_options[api_secret]' size='80' type='text' value='<?php echo esc_attr( $api_secret ) ?>' />
+		<input id='pmpro_keap_api_secret' name='pmpro_keap_options[api_secret]' size='80' type='password' value='<?php echo esc_attr( $api_secret ) ?>' />
 	<?php
 	}
 
