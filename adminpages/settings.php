@@ -27,15 +27,43 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 	$options[ 'api_secret' ] = sanitize_text_field( $_REQUEST[ 'pmpro_keap_options' ] [ 'api_secret' ] );
 	//save level options. It must delete the old options and save the new ones
 
-	if(  ! empty( $_REQUEST[ 'pmpro_keap_options' ][ 'levels' ] ) ) {
-		foreach( $_REQUEST[ 'pmpro_keap_options' ][ 'levels' ] as $level_id => $level_tags ) {
-			$options[ 'levels' ][ $level_id ] = sanitize_text_field( $level_tags );
-		}
-	}
-	//save the options	
-	update_option( 'pmpro_keap_options', $options );
 
+	// Check if levels are submitted in the request
+	if ( isset( $_REQUEST['pmpro_keap_options']['levels'] ) ) {
+		$submitted_levels = $_REQUEST['pmpro_keap_options']['levels'];
+
+		// Iterate over existing levels to check if they should be updated or deleted
+		foreach ( $options['levels'] as $level_id => $level_tags ) {
+			if ( isset( $submitted_levels[$level_id] ) ) {
+				// Update existing levels with new tags
+				$temp_level_tags = array();
+				foreach ( $submitted_levels[$level_id] as $tag ) {
+					$temp_level_tags[] = sanitize_text_field( $tag );
+				}
+				$options['levels'][$level_id] = $temp_level_tags;
+			} else {
+				// If a level is not in the request, it means all items were deleted, so remove the level
+				unset( $options['levels'][$level_id] );
+			}
+		}
+
+		// Add any new levels that were submitted
+		foreach ( $submitted_levels as $level_id => $level_tags ) {
+			if ( ! isset( $options['levels'][$level_id] ) ) {
+				$temp_level_tags = array();
+				foreach ( $level_tags as $tag ) {
+					$temp_level_tags[] = sanitize_text_field( $tag );
+				}
+				$options['levels'][$level_id] = $temp_level_tags;
+			}
+		}
+	} else {
+		// If no levels are submitted, clear all levels
+		$options['levels'] = array();
+	}
+	update_option( 'pmpro_keap_options', $options );
 }
+
 	// Include admin header
 	require_once PMPRO_DIR . '/adminpages/admin_header.php';
 	$options = get_option( 'pmpro_keap_options' );
