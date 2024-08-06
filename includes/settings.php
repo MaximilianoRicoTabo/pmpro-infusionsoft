@@ -260,9 +260,20 @@
 		<span class="<?php echo esc_attr( 'pmpro_tag pmpro_tag-has_icon pmpro_tag-inactive pmpro-keap-tag' ) ?>">
 			<?php esc_html_e( 'Not Authorized', 'pmpro-infusionsoft' ); ?>
 		</span>
-		<a href="<?php echo esc_url( admin_url( 'admin.php?page=pmpro-keap&action=authorize_keap' ) ); ?>" class="button button-secondary">
-			<?php esc_html_e( 'Authorize with Keap', 'pmpro-infusionsoft' ) ?>
+		<?php
+			$options =  get_option( 'pmpro_keap_options' );
+			if( !empty( $options[ 'api_key' ] ) && !empty( $options[ 'api_secret' ] ) ) {
+		?>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=pmpro-keap&action=authorize_keap' ) ); ?>" class="button button-secondary">
+				<?php esc_html_e( 'Authorize with Keap', 'pmpro-infusionsoft' ) ?>
 
 		<?php
+			} else {
+				?>
+					<div class="notice notice-warning is-dismissible">
+						<p><?php esc_html_e( 'creds are required to authorize with keap', 'pmpro-infusionsoft' ); ?></p>
+					</div>
+					<?php
+			}
 	}
 ?>
