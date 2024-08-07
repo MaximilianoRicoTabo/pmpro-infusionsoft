@@ -96,9 +96,8 @@
 	function pmpro_keap_api_key() {
 		$options = get_option( 'pmpro_keap_options' );
 		$api_key = ! empty( $options['api_key'] ) ? $options['api_key'] : '';
-		/// Change type to 'password'
 		?>
-		<input id='pmpro_keap_api_key' name='pmpro_keap_options[api_key]' size='80' type='text' value='<?php echo esc_attr( $api_key ) ?>' />
+		<input id='pmpro_keap_api_key' name='pmpro_keap_options[api_key]' size='80' type='password' value='<?php echo esc_attr( $api_key ) ?>' />
 	<?php
 	}
 
@@ -111,9 +110,8 @@
 	function pmpro_keap_secret_key() {
 		$options = get_option( 'pmpro_keap_options' );
 		$api_secret = ! empty( $options['api_secret'] ) ? $options['api_secret'] : '';
-		/// Change type to 'password'
 		?>
-		<input id='pmpro_keap_api_secret' name='pmpro_keap_options[api_secret]' size='80' type='text' value='<?php echo esc_attr( $api_secret ) ?>' />
+		<input id='pmpro_keap_api_secret' name='pmpro_keap_options[api_secret]' size='80' type='password' value='<?php echo esc_attr( $api_secret ) ?>' />
 	<?php
 	}
 
