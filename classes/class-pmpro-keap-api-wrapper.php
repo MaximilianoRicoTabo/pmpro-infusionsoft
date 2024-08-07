@@ -80,8 +80,8 @@ class PMPro_Keap_Api_Wrapper {
 		);
 
 		$headers = array(
-			'Content-Type' => 'application/x-www-form-urlencoded',
-			'Authorization' => 'Basic ' . base64_encode( $this->clientId . ':' . $this->clientSecret )
+			'Content-Type: application/x-www-form-urlencoded',
+			'Authorization: Basic ' . base64_encode( $this->clientId . ':' . $this->clientSecret )
 		);
 
 		$response = $this->pmpro_keap_make_curl_request(self::TOKEN_URL, 'POST', $postFields, $headers);
@@ -147,7 +147,7 @@ class PMPro_Keap_Api_Wrapper {
 		];
 
         $response = $this->pmpro_keap_make_curl_request( $url, $method, $data, $headers );
-		$error_codes = array( 'keymanagement.service.access_token_expired', 'keymanagement.service.invalid_access_token', 'keymanagement.service.access_token_not_approved' );
+		$error_codes = array( 'keymanagement.service.access_token_expired', 'keymanagement.service.invalid_access_token', 'keymanagement.service.access_token_not_approved', 'oauth.v2.InvalidAccessToken' );
 		if ( isset($response['fault']) && 
 		in_array( $response['fault'][ 'detail' ]['errorcode'], $error_codes ) ) {		
 			// Token expired, refresh it
@@ -236,6 +236,16 @@ class PMPro_Keap_Api_Wrapper {
 		return $this->pmpro_keap_make_request( 'POST', 'contacts/' . $contact_id . '/tags', $data );
 	}
 
+	public function pmpro_keap_remove_tags_from_contact( $contact_id, $tagIds ) {		
+		foreach ( $tagIds as $tagId ) {
+			$ret = $this->pmpro_keap_make_request( 'DELETE', 'contacts/' . $contact_id . '/tags/' . $tagId );
+			//TODO handle errors
+			
+		}
+		//assume success
+		return true;
+	}
+
 	//getters for private attributes
 	public function pmpro_keap_get_token() {
 		return $this->token;
@@ -278,22 +288,25 @@ class PMPro_Keap_Api_Wrapper {
 			'body'    => null,
 		];
 
-		/// Look into reworking this.
 		// Set the body based on Content-Type
 		if ( $data ) {
+			// Check if the Content-Type is application/x-www-form-urlencoded
+			$is_urlencoded = false;
 			foreach ( $headers as $header ) {
 				if ( strpos( $header, 'Content-Type: application/x-www-form-urlencoded' ) !== false ) {
-					if ( is_array( $data ) ) {
-						$args['body'] = build_query( $data );
-					} else {
-						$args['body'] = $data;
-					}
-				} else { /// Do we have to use JSON?
-					if ( $method === 'POST' || $method === 'PATCH' ) {
-						$args['body'] = json_encode( $data );
-					} else {
-						$args['body'] = $data;
-					}
+					$is_urlencoded = true;
+					break; // No need to continue the loop once found
+				}
+			}
+
+			// Now handle $args['body'] based on the result
+			if ( $is_urlencoded ) {
+				$args['body'] = is_array( $data ) ? build_query( $data ) : $data;
+			} else {
+				if ( $method === 'POST' || $method === 'PATCH' || $method === 'DELETE' ) {
+					$args['body'] = json_encode( $data );
+				} else {
+					$args['body'] = $data;
 				}
 			}
 		}

@@ -95,7 +95,7 @@ if ( !empty( $_REQUEST['savesettings'] ) ) {
 	 		<div id="icon-options-general" class="icon32"><br></div>
 			<h2><?php esc_html_e( 'Keap Integration Options and Settings', 'pmpro-infusionsoft' );?></h2>
 
-		<form action="" method="post" enctype="multipart/form-data">
+		<form action="" method="post" enctype="multipart/form-data" >
 	 	<?php
 				wp_nonce_field( 'savesettings', 'pmpro_keap_nonce' );
 				do_settings_sections( 'pmpro_keap_options' );
