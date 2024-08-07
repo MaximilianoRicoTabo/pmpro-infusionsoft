@@ -1,11 +1,10 @@
 <?php
+global $msg, $msgt;
 
 // Only admins can access this page.
 if( !function_exists( "current_user_can" ) || ( !current_user_can( "manage_options" ) ) ) {
 	die( esc_html__( "You do not have permissions to perform this action.", 'p' ) );
 }
-
-global $msg, $msgt;
 
 // Bail if nonce field isn't set.
 if ( !empty( $_REQUEST['savesettings'] ) && ( empty( $_REQUEST[ 'pmpro_keap_nonce' ] ) 
@@ -16,20 +15,20 @@ unset( $_REQUEST[ 'savesettings' ] );
 }
 
 // Save settings.
-if( !empty( $_REQUEST['savesettings'] ) ) {
-
-	// Assume success.
-	$msg = true;
-	$msgt = __("Your security settings have been updated.", 'pmpro-infusionsoft' );
+if ( !empty( $_REQUEST['savesettings'] ) ) {
 	//save options
 	$options = get_option( 'pmpro_keap_options' );
 	$options[ 'api_key' ] = sanitize_text_field( $_REQUEST[ 'pmpro_keap_options' ][ 'api_key' ] );
-	$options[ 'api_secret' ] = sanitize_text_field( $_REQUEST[ 'pmpro_keap_options' ] [ 'api_secret' ] );
-	//save level options. It must delete the old options and save the new ones
+	$options[ 'api_secret' ] = sanitize_text_field( $_REQUEST[ 'pmpro_keap_options' ][ 'api_secret' ] );
 
+	// Reset authentication if the API key or secret are missing.
+	if ( empty( $options[ 'api_key' ] ) || empty( $options[ 'api_secret' ] ) ) {
+		delete_option( 'pmpro_keap_access_token' );
+		delete_option( 'pmpro_keap_refresh_token' );
+	}
 
-	// Check if levels are submitted in the request
-	if ( isset( $_REQUEST['pmpro_keap_options']['levels'] ) ) {
+	// Save level tags and clear them if unselected or missing.
+	if ( ! empty( $_REQUEST[ 'pmpro_keap_options' ][ 'levels' ] ) ) {
 		$submitted_levels = $_REQUEST['pmpro_keap_options']['levels'];
 
 		// Iterate over existing levels to check if they should be updated or deleted
@@ -61,9 +60,21 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 		// If no levels are submitted, clear all levels
 		$options['levels'] = array();
 	}
-	update_option( 'pmpro_keap_options', $options );
-}
 
+	// Save the User Tags and delete them if they are missing.
+	if ( ! empty( $_REQUEST['pmpro_keap_options']['users_tags'] ) ) {
+		$options[ 'users_tags' ] = array_map( 'sanitize_text_field', $_REQUEST[ 'pmpro_keap_options' ][ 'users_tags' ] );
+	} else {
+		$options[ 'users_tags' ] = array();
+	}
+
+	// Sav the options.
+	update_option( 'pmpro_keap_options', $options );
+
+	$msg = true;
+	$msgt = __( 'Settings saved successfully.', 'pmpro-infusionsoft' );
+
+}
 	// Include admin header
 	require_once PMPRO_DIR . '/adminpages/admin_header.php';
 	$options = get_option( 'pmpro_keap_options' );
@@ -82,7 +93,7 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 		?>
 	 	<div class="wrap">
 	 		<div id="icon-options-general" class="icon32"><br></div>
-			<h2><?php esc_html_e( 'Keap', 'pmpro-infusionsoft' );?></h2>
+			<h2><?php esc_html_e( 'Keap Integration Options and Settings', 'pmpro-infusionsoft' );?></h2>
 
 		<form action="" method="post" enctype="multipart/form-data">
 	 	<?php
@@ -92,11 +103,8 @@ if( !empty( $_REQUEST['savesettings'] ) ) {
 			<p class="submit topborder">
 	 				<input name="savesettings" type="submit" class="button-primary" value="<?php esc_html_e('Save Settings', 'pmpro-infusionsoft');?>" />
 	 			</p>
-	 			<?php if ( !$accessToken ) { ?>
-			<p><?php esc_html_e( 'You need to authorize with Keap to fetch tags.', 'pmpro-infusionsoft' ) ?></p>
-	 			<?php } ?>
 	 		</form>
 	 	</div>
 
-		<?php 
+		<?php
 	 	require_once PMPRO_DIR . '/adminpages/admin_footer.php';

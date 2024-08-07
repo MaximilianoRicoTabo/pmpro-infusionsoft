@@ -23,12 +23,10 @@ class PMPro_Keap_Api_Wrapper {
 	public function __construct() {
 		$options = get_option( 'pmpro_keap_options' );
 		if ( ! empty( $options ) ) {
-		
-		
-		$this->clientId = $options[ 'api_key' ];
-		$this->clientSecret = $options[ 'api_secret' ];
-		$this->redirectUri = admin_url( self::REDIRECT_URI );
-		$this->token = get_option( 'pmpro_keap_access_token' );
+			$this->clientId = $options[ 'api_key' ];
+			$this->clientSecret = $options[ 'api_secret' ];
+			$this->redirectUri = admin_url( self::REDIRECT_URI );
+			$this->token = get_option( 'pmpro_keap_access_token' );
 		}
 	}
 
@@ -54,11 +52,11 @@ class PMPro_Keap_Api_Wrapper {
 	public function pmpro_keap_get_authorization_url() {
 		$query = build_query([
 			'client_id' => $this->clientId,
-			'redirect_uri' => $this->redirectUri,
+			'redirect_uri' => urlencode( $this->redirectUri ),
 			'response_type' => 'code',
 			'scope' => 'full'
 		]);
-
+		
 		return self::AUTHORIZATION_URL . "?$query";
 	}
 
@@ -71,18 +69,20 @@ class PMPro_Keap_Api_Wrapper {
 	 */
 	public function pmpro_keap_request_token( $authorizationCode ) {
 
-		$postFields = build_query([
-			'grant_type' => 'authorization_code',
-			'client_id' => $this->clientId,
-			'client_secret' => $this->clientSecret,
-			'code' => $authorizationCode,
-			'redirect_uri' => $this->redirectUri
-		]);
+		$postFields = build_query(
+			array(
+				'client_id' => $this->clientId,
+				'client_secret' => $this->clientSecret,
+				'code' => $authorizationCode,
+				'grant_type' => 'authorization_code',
+				'redirect_uri' => $this->redirectUri
+			)
+		);
 
-		$headers = [
-			'Content-Type: application/x-www-form-urlencoded',
-			'Authorization: Basic ' . base64_encode($this->clientId . ':' . $this->clientSecret)
-		];
+		$headers = array(
+			'Content-Type' => 'application/x-www-form-urlencoded',
+			'Authorization' => 'Basic ' . base64_encode( $this->clientId . ':' . $this->clientSecret )
+		);
 
 		$response = $this->pmpro_keap_make_curl_request(self::TOKEN_URL, 'POST', $postFields, $headers);
 
@@ -270,6 +270,7 @@ class PMPro_Keap_Api_Wrapper {
 	 * @return array The response.
 	 * @since TBD
 	 */
+
 	private function pmpro_keap_make_curl_request( $url, $method, $data = null, $headers = [] ) {
 		$args = [
 			'method'  => $method,
@@ -277,25 +278,22 @@ class PMPro_Keap_Api_Wrapper {
 			'body'    => null,
 		];
 
+		/// Look into reworking this.
 		// Set the body based on Content-Type
 		if ( $data ) {
-			// Check if the Content-Type is application/x-www-form-urlencoded
-			$is_urlencoded = false;
 			foreach ( $headers as $header ) {
 				if ( strpos( $header, 'Content-Type: application/x-www-form-urlencoded' ) !== false ) {
-					$is_urlencoded = true;
-					break; // No need to continue the loop once found
-				}
-			}
-
-			// Now handle $args['body'] based on the result
-			if ( $is_urlencoded ) {
-				$args['body'] = is_array( $data ) ? build_query( $data ) : $data;
-			} else {
-				if ( $method === 'POST' || $method === 'PATCH' ) {
-					$args['body'] = json_encode( $data );
-				} else {
-					$args['body'] = $data;
+					if ( is_array( $data ) ) {
+						$args['body'] = build_query( $data );
+					} else {
+						$args['body'] = $data;
+					}
+				} else { /// Do we have to use JSON?
+					if ( $method === 'POST' || $method === 'PATCH' ) {
+						$args['body'] = json_encode( $data );
+					} else {
+						$args['body'] = $data;
+					}
 				}
 			}
 		}
@@ -316,25 +314,30 @@ class PMPro_Keap_Api_Wrapper {
 
 	/**
 	 *
-	 * @param WP_User $user The user.
-	 * @param array $data The data.
+	 * @param WP_User $user The WordPress user.
+	 * @param array $data The additional data we would like to send to Keap.
 	 * @return array The formatted contact.
 	 * @since TBD
 	 */
 	private function pmpro_keap_format_contact_request( $user, $data = [] ) {
-		//Add a filter to allow other plugins to add more data to the contact
+		/**
+		 * Filter the contact request data before sending it to Keap.
+		 * @param array $data The additional data we would like to send to Keap.
+		 * @param WP_User $user The WordPress user.
+		 */
 		$data = apply_filters( 'pmpro_keap_format_contact_request', $data, $user );
+
 		$ret = array (
-			'email_addresses' => [
-				[
+			'email_addresses' => array(
+				array(
 					'email' => $user->user_email,
 					'field' => 'EMAIL1'
-				]
-			],
+				)
+			),
 			'given_name' => $user->first_name,
 			'family_name' => $user->last_name,
 		);
-		if (! empty( $data ) ) {
+		if ( ! empty( $data ) ) {
 			$ret = array_merge( $ret, $data );
 		}
 		return $ret;
