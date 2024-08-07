@@ -5,35 +5,12 @@
 
 	/**
 	 * Add the options page
-	 *
-	 * @return void
-	 * @since TBD
-	 *
 	 */
 	function pmpro_keap_admin_add_page() {
-		$keap_integration_menu_text = __( 'Keap', 'pmpro-infusionsoft' );
-		add_submenu_page( 'pmpro-dashboard', $keap_integration_menu_text, $keap_integration_menu_text, 'manage_options',
-			'pmpro-keap', 'pmpro_keap_options_page' );
+		add_submenu_page( 'pmpro-dashboard', 'Keap', 'Keap', 'manage_options', 'pmpro-keap', 'pmpro_keap_options_page' );
 	}
-
-	function pmpro_keap_admin_bar_menu_add_page() {
-		//Bail if can't manage options
-		if( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-		global $wp_admin_bar;
-		$keap_integration_menu_text = __( 'Keap', 'pmpro-infusionsoft' );
-		$wp_admin_bar->add_menu( array(
-			'id' => 'pmpro-keap',
-			'title' => $keap_integration_menu_text,
-			'href' => admin_url( 'admin.php?page=pmpro-keap' ),
-			'parent' => 'paid-memberships-pro',
-			'meta' => array( 'class' => 'pmpro-keap' )
-		) );
-	}
-
 	add_action( 'admin_menu', 'pmpro_keap_admin_add_page' );
-	add_action( 'admin_bar_menu', 'pmpro_keap_admin_bar_menu_add_page', 1500 );
+
 
 	/**
 	 * Get settings options for PMPro Keap and and render the markup to save the options
@@ -52,25 +29,16 @@
 	 * @since TBD
 	 */
 	function pmpro_keap_admin_init() {
-		//setup 
-		$translated_keap_settings = __( 'General Settings', 'pmpro-infusionsoft' );
-		$translated_keap_authorized_label = __( 'Keap Authorized', 'pmpro-infusionsoft' );
-		$translated_keap_api_key_label = __( 'Keap API Key', 'pmpro-infusionsoft' );
-		$translated_keap_secret_key_label = __( 'Keap Secret Key', 'pmpro-infusionsoft' );
-		$translated_keap_users_tags_label = __( 'All Users Tags', 'pmpro-infusionsoft' );
-		$translated_keap_levels_tags_label = __( 'Levels Tags', 'pmpro-infusionsoft' );
-
 
 		register_setting( 'pmpro_keap_options', 'pmpro_keap_options', 'pmpro_keap_options_validate' );
-		add_settings_section( 'pmpro_keap_section_general', $translated_keap_settings, 'pmpro_keap_section_general', 'pmpro_keap_options' );
-		add_settings_field( 'pmpro_keap_keap_authorized', $translated_keap_authorized_label, 'pmpro_keap_keap_authorized', 'pmpro_keap_options', 'pmpro_keap_section_general' );
-		add_settings_field( 'pmpro_keap_api_key', $translated_keap_api_key_label, 'pmpro_keap_api_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
-		add_settings_field( 'pmpro_keap_api_secret', $translated_keap_secret_key_label, 'pmpro_keap_secret_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
-		add_settings_field( 'pmpro_keap_users_tags', $translated_keap_users_tags_label, 'pmpro_keap_users_tags', 'pmpro_keap_options', 'pmprois_section_general' );
-		if (  get_option( 'pmpro_keap_access_token' ) ) {
-			add_settings_section( 'pmpro_keap_section_levels', $translated_keap_levels_tags_label, 'pmpro_keap_section_levels', 'pmpro_keap_options' );
-		}
-	
+
+		add_settings_section( 'pmpro_keap_section_general', __( 'Add one or more Keap tags when users sign up for your site.', 'pmpro-infusionsoft' ), 'pmpro_keap_section_general', 'pmpro_keap_options' );
+		add_settings_field( 'pmpro_keap_keap_authorized', __( 'Keap Authorized', 'pmpro-infusionsoft' ), 'pmpro_keap_keap_authorized', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_api_key', __( 'Keap API Key', 'pmpro-infusionsoft' ), 'pmpro_keap_api_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_api_secret', __( 'Keap Secret Key', 'pmpro-infusionsoft' ), 'pmpro_keap_secret_key', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_field( 'pmpro_keap_users_tags', __( 'All Users Tags', 'pmpro-infusionsoft' ), 'pmpro_keap_users_tags', 'pmpro_keap_options', 'pmpro_keap_section_general' );
+		add_settings_section( 'pmpro_keap_section_levels', __( 'Membership Level Tags', 'pmpro-infusionsoft' ), 'pmpro_keap_section_levels', 'pmpro_keap_options' );
+		
 		if ( isset($_GET['action']) && $_GET['action'] == 'authorize_keap' ) {
 			$keap = PMPro_Keap_Api_Wrapper::get_instance();
 			$authUrl = $keap->pmpro_keap_get_authorization_url();
@@ -81,7 +49,7 @@
 		// Handle the OAuth callback
 		if ( isset( $_GET['page'] ) && $_GET['page'] == 'pmpro-keap' && isset( $_GET['code'] ) ) {
 			$keap = PMPro_Keap_Api_Wrapper::get_instance();
-			$authorization_code = $_GET['code'];
+			$authorization_code = sanitize_text_field( $_GET['code'] );
 			$token_response = $keap->pmpro_keap_request_token( $authorization_code );
 
 			if ( isset($token_response['access_token'] ) ) {
@@ -92,6 +60,7 @@
 			} else {
 				// Handle token request error
 				echo '<div class="error"><p>Error requesting access token: ' . esc_html($token_response['error_description']) . '</p></div>';
+				return;
 			}
 
 			// Redirect to the settings page after processing
@@ -111,7 +80,10 @@
 	 */
 	function pmpro_keap_section_general() {
 		?>
-		<p><?php esc_html_e('Settings for the Keap Integration.', 'pmpro-infusionsoft');?></p>
+		<p>
+		<?php
+		/* translators: %s - link to Paid Memberships Pro */
+		echo wp_kses_post( sprintf( __('If you have <a href="%s" target="_blank">Paid Memberships Pro</a> installed, you can assign members to one or more Keap tags based on their membership level.', 'pmpro-infusionsoft'), 'https://www.paidmembershipspro.com' ) ); ?></p>	
 		<?php
 	}
 
@@ -123,11 +95,7 @@
 	 */
 	function pmpro_keap_api_key() {
 		$options = get_option( 'pmpro_keap_options' );
-		if( !empty($options['api_key'] ) ) {
-			$api_key = $options['api_key'];
-		} else {
-			$api_key = "";
-		}
+		$api_key = ! empty( $options['api_key'] ) ? $options['api_key'] : '';
 		?>
 		<input id='pmpro_keap_api_key' name='pmpro_keap_options[api_key]' size='80' type='password' value='<?php echo esc_attr( $api_key ) ?>' />
 	<?php
@@ -141,14 +109,45 @@
 	 */
 	function pmpro_keap_secret_key() {
 		$options = get_option( 'pmpro_keap_options' );
-		if(!empty($options['api_secret'])) {
-			$api_secret = $options['api_secret'];
-		} else {
-			$api_secret = "";
-		}
+		$api_secret = ! empty( $options['api_secret'] ) ? $options['api_secret'] : '';
 		?>
 		<input id='pmpro_keap_api_secret' name='pmpro_keap_options[api_secret]' size='80' type='password' value='<?php echo esc_attr( $api_secret ) ?>' />
 	<?php
+	}
+
+	/**
+	 * Add User Tags for "All Users"
+	 *
+	 * @return void
+	 */
+	function pmpro_keap_users_tags() {
+		$options = get_option( 'pmpro_keap_options' );
+		$all_tags = pmpro_keap_get_tags();
+
+		// Figure out if array, single value or null.
+		if ( isset( $options['users_tags']) && is_array( $options['users_tags'] ) ) {
+			$selected_tags = $options['users_tags'];
+		} elseif( isset( $options['users_tags'] ) ) {
+			//probably saved as comma separated string
+			$selected_tags = str_replace(" ", "", $options['users_tags']);
+			$selected_tags = explode(",", $selected_tags);
+		} else {
+			$selected_tags = array();
+		}
+
+		// Get tags.
+		if ( empty( $all_tags ) ) {
+			esc_html_e( 'No tags found.', 'pmpro-infusionsoft' );
+		} else {
+			echo "<select multiple='yes' name='pmpro_keap_options[users_tags][]'>";
+			foreach( $all_tags as $tag_id => $tag ) {
+				echo "<option value='" . esc_attr( $tag['id'] ) . "' ";
+				if(in_array( $tag[ 'id' ], $selected_tags))
+					echo "selected='selected'";
+				echo ">" . esc_html( $tag['name'] ) . "</option>";
+			}
+			echo "</select>";
+		}
 	}
 
 	/**
@@ -159,17 +158,29 @@
 	 */
 	function pmpro_keap_section_levels() {
 		?>
-		<p>
-			<?php esc_html_e('For each level below, choose the tags which should be added 
-			to the contact when a new user registers or switches levels.', 'pmpro-infusionsoft'); ?>
-		</p>
 		<table class="<?php echo esc_attr( 'form-table' ) ?>">
 			<?php
 				$levels = pmpro_getAllLevels( true, true );
 				$all_tags = pmpro_keap_get_tags();
+
+				// Show message if no levels are found and bail.
+				if ( empty( $levels ) ) {
+					?><p><?php esc_html_e( 'No membership levels found.', 'pmpro-infusionsoft' );?></p><?php
+					return;
+				} else {
+					?>
+					<p><?php esc_html_e( 'For each level below, choose the tags which should be added 
+					to the contact when a new user registers or switches levels.', 'pmpro-infusionsoft' ); ?></p>
+					<?php
+				}
+
 				foreach( $levels as $level ) {
 					$tags = pmpro_keap_get_tags_for_level( $level->id );
-			?>
+
+					if ( empty( $tags ) ) {
+						$tags = array();
+					}
+				?>
 					<tr>
 						<th>
 							<?php echo esc_html( $level->name );?>
@@ -218,11 +229,7 @@
 	 */
 	function pmpro_keap_get_tags_for_level( $level_id ) {
 		$options = get_option( 'pmpro_keap_options' );
-		if( !empty( $options[ 'levels' ][ $level_id ] ) ) {
-			return $options[ 'levels' ][ $level_id ];
-		} else {
-			return array();
-		}
+		return $options['levels'][$level_id] ?? array();
 	}
 
 	/**
@@ -234,15 +241,11 @@
 	function pmpro_keap_get_tags() {
 		$keap = PMPro_Keap_Api_Wrapper::get_instance();
 		$tags = $keap->pmpro_keap_get_tags();
-		//bail if no tags
-		if( empty( $tags[ 'tags' ] ) ) {
-			return array();
-		}
-		return $tags['tags'];
+		return ! empty( $tags['tags'] ) ? $tags['tags'] : array();
 	}
 
 	/**
-	 * Show either or not the user is authorized with Keap
+	 * Show either or not if Keap is authorized or not.
 	 *
 	 * @since TBD
 	 */
@@ -262,7 +265,7 @@
 		</span>
 		<?php
 			$options =  get_option( 'pmpro_keap_options' );
-			if( !empty( $options[ 'api_key' ] ) && !empty( $options[ 'api_secret' ] ) ) {
+			if ( ! empty( $options[ 'api_key' ] ) && !empty( $options[ 'api_secret' ] ) ) {
 		?>
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=pmpro-keap&action=authorize_keap' ) ); ?>" class="button button-secondary">
 				<?php esc_html_e( 'Authorize with Keap', 'pmpro-infusionsoft' ) ?>
@@ -271,9 +274,8 @@
 			} else {
 				?>
 					<div class="notice notice-warning is-dismissible">
-						<p><?php esc_html_e( 'creds are required to authorize with keap', 'pmpro-infusionsoft' ); ?></p>
+						<p><?php esc_html_e( 'Please enter your Keap API key and API secret to continue. See this guide on how to obtain your API key and secret.', 'pmpro-infusionsoft' ); ?></p>
 					</div>
 					<?php
 			}
 	}
-?>

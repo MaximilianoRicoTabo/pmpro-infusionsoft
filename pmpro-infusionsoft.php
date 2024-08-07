@@ -1,32 +1,32 @@
 <?php
 /*
-Plugin Name: Paid Memberships Pro - Infusionsoft Add On
+Plugin Name: Paid Memberships Pro - Keap Add On
 Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-infusionsoft-integration/
-Description: Sync your WordPress users and members with Infusionsoft contacts.
+Description: Sync your WordPress users and members with Keap contacts.
 Version: 1.4
 Author: Paid Memberships Pro
-Text Domain: pmpro-keap
+Text Domain: pmpro-infusionsoft
 Domain Path: /languages
 Author URI: https://www.paidmembershipspro.com/
 */
 
+/**
+ * Note: We had to keep the Text Domain as pmpro-infusionsoft as the plugin folder/slug is still pmp-infusionsoft in .org
+ * All functions, variables and references should use "Keap" where possible.
+ * 
+ */
+
 define( 'PMPRO_KEAP_DIR', dirname( __FILE__ ) );
+define( 'PMPRO_KEAP_VERSION', '1.4' );
 
-define( 'PMPRO_KEAP_VERSION', '0.1' );
-
-	require_once PMPRO_KEAP_DIR . '/includes/settings.php';
-	include_once( PMPRO_KEAP_DIR . '/classes/class-pmpro-keap-api-wrapper.php' );
-
-global $pmprois_error_msg;
+require_once PMPRO_KEAP_DIR . '/includes/settings.php';
+include_once( PMPRO_KEAP_DIR . '/classes/class-pmpro-keap-api-wrapper.php' );
 
 //init
 function pmpro_keap_init() {
-
 	add_action( 'user_register', 'pmpro_keap_user_register', 10, 1 );
 	add_action( 'pmpro_after_change_membership_level', 'pmpro_keap_pmpro_after_change_membership_level', 10, 2 );
 	add_action( 'profile_update',  'pmpro_keap_profile_update', 10, 2);
-
-
 }
 
 add_action( 'init', 'pmpro_keap_init' );
@@ -50,45 +50,54 @@ add_action( 'admin_enqueue_scripts', 'pmpro_keap_enqueue_css_assets' );
  * @since TBD
  */
 function pmpro_keap_update_keap_contact( $user, $level_id = NULL, $skip_level_check = false ) {
-	//Bail if pmpro_getMembershipLevelsForUser doesn't exist
+	// Bail if pmpro_getMembershipLevelsForUser doesn't exist
 	if ( ! function_exists( 'pmpro_getMembershipLevelsForUser' ) ) {
 		return;
 	}
-	if( $level_id != NULL ) {
+
+	// Default values.
+	$contact_id = NULL;
+	$tags_id = array();
+
+	// Get the level Object or all levels for the user.
+	if ( $level_id != NULL ) {
 		$levels = array( pmpro_getLevel( $level_id ) );
 	} else {
 		$levels = pmpro_getMembershipLevelsForUser( $user->ID );
 	}
-    $options = get_option( 'pmpro_keap_options' );
 
+	// Connect to Keap. 
 	$keap = PMPro_Keap_Api_Wrapper::get_instance();
     $response = $keap->pmpro_keap_get_contact_by_email( $user->user_email );
-	//Get an array of ids from $tags which is a value, key array
-	//array_map(function($item) {	return $item['id'];}, $example2);
 
-	$contact_id = NULL;
-	//The user doesn't exist in keap. Add them.
-    if(  $response[ 'count' ] == 0 ) {
-		//add the contact. 
+	/// We probably need to make sure we can connect and not fatal error.
+
+	// Add the customer to Keap if they don't exist, otherwise update their contact if they do exist.
+    if (  $response[ 'count' ] == 0 ) {
         $response = $keap->pmpro_keap_add_contact( $user );
 		$contact_id = $response[ 'id' ];
     } else {
-		//already exists in keap. update the contact
         $contact_id = $response[ 'contacts' ][ 0 ][ 'id'];
 		$keap->pmpro_keap_update_contact( $contact_id, $user );
     }
 
+	// Get tags from the options page so we can start applying it to the member.
+	$options = get_option( 'pmpro_keap_options' );
+
+	// The $skip_level_check will always run when hooking into PMPro actions.
 	if ( ! $skip_level_check ) {
-		$tags_id = array();
-		foreach( $levels as $level ) {
-			if( !empty( $options[ 'levels' ][ $level->id ] ) ) {
+		foreach ( $levels as $level ) {
+			if ( !empty( $options[ 'levels' ][ $level->id ] ) ) {
 				//append to the tags_id array
 				$tags_id = array_merge( $tags_id, $options[ 'levels' ][ $level->id ] );
 			}
 		}
-		if( ! empty( $tags_id ) ) {
-			$keap->pmpro_keap_assign_tags_to_contact( $contact_id, $tags_id );
-		}
+	}
+
+	// Merge in the user tags if they exist and get unique values.
+	$tags_id = array_unique( array_merge( $tags_id, $options[ 'users_tags' ] ) );
+	if ( ! empty( $tags_id ) ) {
+		$keap->pmpro_keap_assign_tags_to_contact( $contact_id, $tags_id );
 	}
 
 	return $contact_id;
